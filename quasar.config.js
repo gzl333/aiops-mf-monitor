@@ -169,6 +169,15 @@ module.exports = configure(function (ctx) {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
         'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
+      },
+      // @mimas: allow hot reload
+      client: {
+        webSocketURL: {
+          hostname: 'localhost',
+          pathname: '/ws',
+          port: defaultPort,
+          protocol: 'http'
+        }
       }
     },
 
