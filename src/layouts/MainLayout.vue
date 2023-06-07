@@ -5,6 +5,8 @@ import { useStore } from 'stores/store'
 // import { useRoute, useRouter } from 'vue-router'
 import { i18n } from 'boot/i18n'
 
+import { logs } from 'src/configs/logs'
+
 // const props = defineProps({
 //   foo: {
 //     type: String,
@@ -22,9 +24,8 @@ const tc = i18n.global.tc
 const activeItem = computed(() => store.items.currentPath[0])
 
 const appPath = process.env.appPath as string
-const appVersion = process.env.appVersion as string
 const releaseTime = process.env.releaseTime as string
-
+const appVersion = logs[0].version
 </script>
 
 <template>
