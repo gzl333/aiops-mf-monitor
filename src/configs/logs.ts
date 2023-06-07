@@ -1,6 +1,18 @@
 // 更新日志内容，版本降序排列
 export const logs = [
   {
+    version: 'v0.0.4',
+    date: '2023-06-07',
+    time: '16:56:00',
+    release_author: 'duyukuan',
+    updates: [
+      {
+        info: '完成视频会议模块迁移、增加网站群模块基础页面、完成项目基本布局',
+        commit_author: 'duyukuan'
+      }
+    ]
+  },
+  {
     version: 'v0.0.3',
     date: '2023-06-07',
     time: '14:09:09',

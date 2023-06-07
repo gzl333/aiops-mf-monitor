@@ -7,15 +7,30 @@ const routes: RouteRecordRaw[] = [
   {
     path: appPath,
     component: () => import('layouts/MainLayout.vue'),
-    redirect: appPath + '/service1',
+    redirect: appPath + '/meeting',
     children: [
       {
-        path: 'service1',
-        component: () => import('pages/Service1Page.vue')
+        path: 'meeting',
+        component: () => import('pages/meeting/VideoMeetingIndex.vue')
       },
       {
-        path: 'service2',
-        component: () => import('pages/Service2Page.vue')
+        path: 'web',
+        component: () => import('pages/web/WebGroupIndex.vue'),
+        redirect: appPath + '/web/overall',
+        children: [
+          {
+            path: 'overall',
+            component: () => import('pages/web/WebOverall.vue')
+          },
+          {
+            path: 'accessibility',
+            component: () => import('pages/web/WebAccessibility.vue')
+          },
+          {
+            path: 'tamper',
+            component: () => import('pages/web/WebTamper.vue')
+          }
+        ]
       },
       // @mimas: about, updates, releases...
       {

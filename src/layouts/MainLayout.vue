@@ -46,25 +46,25 @@ const appVersion = logs[0].version
 
             <q-item
               clickable
-              :active="activeItem === 'service1'"
-              @click="navigateToUrl(appPath + '/service1')"
+              :active="activeItem === 'meeting'"
+              @click="navigateToUrl(appPath + '/meeting')"
               active-class="active-item"
             >
               <q-item-section class="column items-center">
                 <q-icon name="las la-video" size="lg"/>
-                <div class="active-text text-center">{{ tc('服务1') }}</div>
+                <div class="active-text text-center">{{ tc('视频会议') }}</div>
               </q-item-section>
             </q-item>
 
             <q-item
               clickable
-              :active="activeItem === 'service2'"
-              @click="navigateToUrl(appPath + '/service2')"
+              :active="activeItem === 'web'"
+              @click="navigateToUrl(appPath + '/web')"
               active-class="active-item"
             >
               <q-item-section class="column items-center">
-                <q-icon name="las la-server" size="lg"/>
-                <div class="active-text text-center">{{ tc('服务2') }}</div>
+                <q-icon name="las la-poll-h" size="lg"/>
+                <div class="active-text text-center">{{ tc('网站群') }}</div>
               </q-item-section>
             </q-item>
 
@@ -95,7 +95,7 @@ const appVersion = logs[0].version
     </q-drawer>
 
     <q-page-container>
-      <q-scroll-area style="height: 100vh;">
+      <q-scroll-area style="height: calc(100vh - 80px)">
         <router-view/>
       </q-scroll-area>
     </q-page-container>
