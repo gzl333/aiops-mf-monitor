@@ -13,6 +13,11 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'service2',
         component: () => import('pages/Service2Page.vue')
+      },
+      // @mimas: about, updates, releases...
+      {
+        path: 'about',
+        component: () => import('pages/AboutPage.vue')
       }
     ]
   },

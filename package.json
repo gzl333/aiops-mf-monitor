@@ -3,6 +3,7 @@
   "name": "@cnic/monitor",
   "appId": "monitor",
   "defaultPort": 9030,
+  "appPath": "/my/monitor",
   "description": "Micro Frontend",
   "productName": "Micro Frontend",
   "author": "mimas",

@@ -16,7 +16,8 @@ const {
   name,
   appId,
   defaultPort,
-  version
+  version,
+  appPath
 } = require('./package')
 const SystemJSPublicPathWebpackPlugin = require('systemjs-webpack-interop/SystemJSPublicPathWebpackPlugin')
 
@@ -67,6 +68,7 @@ module.exports = configure(function (ctx) {
       vueRouterMode: 'history', // available values: 'hash', 'history'
       distDir: 'dist/' + appId, // @mimas: change quasar build dir, quasar will clean this folder each time building
       env: {
+        appPath, // @mimas: allocated root path of current app
         appVersion: version, // @mimas: application version, process.env.appVersion
         releaseTime: `${new Date()}` // @mimas: release time stamp, process.env.releaseTime
       },
