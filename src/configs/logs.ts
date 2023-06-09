@@ -1,6 +1,18 @@
 // 更新日志内容，版本降序排列
 export const logs = [
   {
+    version: 'v0.1.0',
+    date: '2023-06-09',
+    time: '16:24:00',
+    release_author: 'duyukuan',
+    updates: [
+      {
+        info: '重构邮件系统模块并迁移至监控下\n接入监控单元列表\n接入监控单元实例部分详细信息',
+        commit_author: 'duyukuan'
+      }
+    ]
+  },
+  {
     version: 'v0.0.4',
     date: '2023-06-07',
     time: '16:56:00',

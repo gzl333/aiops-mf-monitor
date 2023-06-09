@@ -12,6 +12,7 @@ const props = defineProps({
 })
 
 const container = ref<HTMLElement>()
+// eslint-disable-next-line
 let myChart: any
 const roamMap = (flag: number) => {
   const currentZoom = myChart.getOption().geo[0].zoom
@@ -31,6 +32,7 @@ const roamMap = (flag: number) => {
 }
 defineExpose({ roamMap })
 onMounted(() => {
+  // eslint-disable-next-line
   const chart: any = echarts.init(container.value!)
   myChart = chart
   echarts.registerMap('china', china as GeoJSONSourceInput)

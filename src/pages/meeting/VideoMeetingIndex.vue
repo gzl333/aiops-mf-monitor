@@ -23,6 +23,7 @@ const mapRef = ref()
 // 表格数据
 const tableRow = ref<EndPointInterface[]>([])
 // 全国地图需要的数据
+// eslint-disable-next-line
 const countrySeries: Record<string, any> = ref([])
 let meetingStatusData: MeetingStatusInterface[] = []
 let meetingPingData: MeetingStatusInterface[] = []
@@ -31,6 +32,7 @@ let coordinateData: Record<string, number[]> = {}
 // 全国所有节点数据
 let nationalNodeData: Array<[StartPointInterface, EndPointInterface]> = []
 // 搜索过滤后的数据
+// eslint-disable-next-line
 let searchFilterData: any[] = []
 // 刷新相关数据
 const isRefresh = ref(true)
@@ -224,6 +226,7 @@ const countryOption = computed(() => ({
   },
   tooltip: {
     trigger: 'item',
+    // eslint-disable-next-line
     formatter: function (params: Record<string, any>) {
       if (params.seriesType === 'effectScatter') {
         const status = params.data.status === '0' ? '<span style="color: red">离线</span>' : '<span style="color: green">在线</span>'
@@ -298,6 +301,7 @@ const handleStatusData = () => {
       longLatArr.push(state.metric.longitude)
       longLatArr.push(state.metric.latitude)
       coordinateData[state.metric.name] = longLatArr
+      // eslint-disable-next-line
       const nodeArr: any = []
       const nodeObj: EndPointInterface = {
         ipv4: [],
@@ -397,6 +401,7 @@ const getCountryData = (data: Array<[StartPointInterface, EndPointInterface]>) =
       lineStyle: {
         normal: {
           // 线段颜色
+          // eslint-disable-next-line
           color: function (item: Record<string, any>) {
             if (item.data.status === '0') {
               return '#FF0000'

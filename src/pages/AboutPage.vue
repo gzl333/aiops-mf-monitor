@@ -90,5 +90,6 @@ import { logs } from 'src/configs/logs'
 
 <style lang="scss" scoped>
 .AboutPage {
+  white-space: pre-wrap;
 }
 </style>

@@ -68,6 +68,18 @@ const appVersion = logs[0].version
               </q-item-section>
             </q-item>
 
+            <q-item
+              clickable
+              :active="activeItem === 'mail'"
+              @click="navigateToUrl(appPath + '/mail')"
+              active-class="active-item"
+            >
+              <q-item-section class="column items-center">
+                <q-icon name="las la-mail-bulk" size="lg"/>
+                <div class="active-text text-center">{{ tc('邮件系统') }}</div>
+              </q-item-section>
+            </q-item>
+
           </q-list>
 
           <div class="row justify-center q-pt-lg">
@@ -95,7 +107,7 @@ const appVersion = logs[0].version
     </q-drawer>
 
     <q-page-container>
-      <q-scroll-area style="height: calc(100vh - 80px)">
+      <q-scroll-area style="height: calc(100vh - 50px)">
         <router-view/>
       </q-scroll-area>
     </q-page-container>

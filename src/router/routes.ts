@@ -32,6 +32,17 @@ const routes: RouteRecordRaw[] = [
           }
         ]
       },
+      {
+        path: 'mail',
+        component: () => import('pages/mail/MailSystemIndex.vue'),
+        redirect: appPath + '/mail/system',
+        children: [
+          {
+            path: 'system',
+            component: () => import('pages/mail/MailSystemList.vue')
+          }
+        ]
+      },
       // @mimas: about, updates, releases...
       {
         path: 'about',
