@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-
+import { Dialog } from 'quasar'
+import ModifyWarningLine from 'components/mail/ModifyWarningLine.vue'
 export interface StatusArrayInterface {
   metric: {
     ipv4s: string[]
@@ -116,5 +117,17 @@ export const useStore = defineStore('main', {
     tables: {}
   }),
   getters: {},
-  actions: {}
+  actions: {
+    // 触发新建访问密匙对话框
+    triggerModifyWarningLine (instance: string, type: string, defaultWarn: number) {
+      Dialog.create({
+        component: ModifyWarningLine,
+        componentProps: {
+          instance,
+          type,
+          defaultWarn
+        }
+      })
+    }
+  }
 })

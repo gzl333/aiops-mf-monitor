@@ -50,17 +50,14 @@ export default {
       return axiosAiops.get('v1/mail/metric/warning/', config)
     },
     // 修改预警线
-    postMetricWarning (params: {body: {
+    postMetricWarning (payload: {body: {
         instance: string,
         cpu_rate?: number,
         memory_used?: number,
         disk_used?: number
       }}) {
-      return axiosAiops({
-        method: 'post',
-        url: 'v1/mail/metric/warning/',
-        data: params.body
-      })
+      const data = payload.body
+      return axiosAiops.post('v1/mail/metric/warning/', data)
     }
   }
 }

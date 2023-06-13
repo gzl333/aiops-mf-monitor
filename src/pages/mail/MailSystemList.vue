@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onBeforeUnmount } from 'vue'
 // import { navigateToUrl } from 'single-spa'
-import { UnitInterface, UnitMetricInterface } from 'stores/store'
+import { UnitInterface, UnitMetricInterface, useStore } from 'stores/store'
 // import { useRoute, useRouter } from 'vue-router'
 // import { i18n } from 'boot/i18n'
 import aiops from 'src/api/aiops'
 import { date } from 'quasar'
+import $bus from 'src/hooks/bus'
 import MyNoData from 'components/mail/MyNoData.vue'
 import LineChart from 'components/chart/LineChart.vue'
+import HistogramChart from 'components/chart/HistogramChart.vue'
 // const props = defineProps({
 //   foo: {
 //     type: String,
@@ -16,72 +18,6 @@ import LineChart from 'components/chart/LineChart.vue'
 //   }
 // })
 // const emits = defineEmits(['change', 'delete'])
-
-// const store = useStore()
-// const route = useRoute()
-// const router = useRouter()
-// const tc = i18n.global.tc
-const timeStamp = Date.now()
-const formattedString = date.formatDate(timeStamp, 'YYYY-MM-DD HH:mm')
-const endTime = ref(formattedString)
-const startDate = date.subtractFromDate(endTime.value, { minutes: 5 })
-const startTime = ref(date.formatDate(startDate, 'YYYY-MM-DD HH:mm'))
-const queryText = ref('')
-const active = ref()
-const unitList = ref<UnitInterface[]>([])
-const allUnitList = ref<UnitInterface[]>([])
-const tab = ref('sequential')
-const cardInfo = ref<UnitMetricInterface[]>([])
-const isRight = ref(false)
-const unitQuery = ref({
-  value: 'host',
-  label: '主机',
-  labelEn: 'host'
-})
-const xAxis = ref<string[]>([])
-const unitOptions = [
-  {
-    value: 'host',
-    label: '主机',
-    labelEn: 'host'
-  },
-  {
-    value: 'switch',
-    label: '交换机',
-    labelEn: 'switch'
-  },
-  {
-    value: 'firewall',
-    label: '防火墙',
-    labelEn: 'firewall'
-  },
-  {
-    value: 'load_balance',
-    label: 'F5负载均衡',
-    labelEn: 'load_balance'
-  },
-  {
-    value: 'VPN',
-    label: 'VPN',
-    labelEn: 'VPN'
-  },
-  {
-    value: 'Tomcat',
-    label: 'Tomcat',
-    labelEn: 'Tomcat'
-  },
-  {
-    value: 'Nginx',
-    label: 'Nginx',
-    labelEn: 'Nginx'
-  },
-  {
-    value: 'MySQL',
-    label: 'MySQL',
-    labelEn: 'MySQL'
-  }
-]
-
 interface ResourcesDataInterface {
   cpu: {
     total: string[],
@@ -131,7 +67,71 @@ interface WarningLineInterface {
   memory_used: number
   disk_used: number
 }
-
+const store = useStore()
+// const route = useRoute()
+// const router = useRouter()
+// const tc = i18n.global.tc
+const timeStamp = Date.now()
+const formattedString = date.formatDate(timeStamp, 'YYYY-MM-DD HH:mm')
+const endTime = ref(formattedString)
+const startDate = date.subtractFromDate(endTime.value, { minutes: 5 })
+const startTime = ref(date.formatDate(startDate, 'YYYY-MM-DD HH:mm'))
+const queryText = ref('')
+const active = ref()
+const unitList = ref<UnitInterface[]>([])
+let allUnitList: UnitInterface[] = []
+const tab = ref('sequential')
+const cardInfo = ref<UnitMetricInterface[]>([])
+const isRight = ref(false)
+let unitInstance = ''
+const unitQuery = ref({
+  value: 'host',
+  label: '主机',
+  labelEn: 'host'
+})
+const xAxis = ref<string[]>([])
+const unitOptions = [
+  {
+    value: 'host',
+    label: '主机',
+    labelEn: 'host'
+  },
+  {
+    value: 'switch',
+    label: '交换机',
+    labelEn: 'switch'
+  },
+  {
+    value: 'firewall',
+    label: '防火墙',
+    labelEn: 'firewall'
+  },
+  {
+    value: 'load_balance',
+    label: 'F5负载均衡',
+    labelEn: 'load_balance'
+  },
+  {
+    value: 'VPN',
+    label: 'VPN',
+    labelEn: 'VPN'
+  },
+  {
+    value: 'Tomcat',
+    label: 'Tomcat',
+    labelEn: 'Tomcat'
+  },
+  {
+    value: 'Nginx',
+    label: 'Nginx',
+    labelEn: 'Nginx'
+  },
+  {
+    value: 'MySQL',
+    label: 'MySQL',
+    labelEn: 'MySQL'
+  }
+]
 const resourcesChartData = ref<ResourcesDataInterface>({
   cpu: {
     total: [],
@@ -191,6 +191,36 @@ const cpuOption = computed(() => ({
   tooltip: {
     trigger: 'axis'
   },
+  toolbox: {
+    showTitle: false,
+    itemSize: 12,
+    left: 90,
+    iconStyle: {
+      color: '#1976D2'
+    },
+    feature: {
+      myTool1: {
+        show: true,
+        title: '修改预警线',
+        icon: 'path://M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z',
+        onclick: function () {
+          store.triggerModifyWarningLine(unitInstance, 'cpu', warningLineObj.value.cpu_rate)
+        }
+      }
+    },
+    tooltip: { // 和 option.tooltip 的配置项相同
+      show: true,
+      formatter: function () {
+        return '修改预警线' // 自定义的 DOM 结构
+      },
+      borderWidth: 0,
+      backgroundColor: '#757575',
+      textStyle: {
+        color: '#FFFFFF',
+        fontSize: 12
+      }
+    }
+  },
   legend: {
     top: 30,
     data: ['总使用率', '用户使用率', '磁盘使用率', '系统使用率']
@@ -238,7 +268,7 @@ const cpuOption = computed(() => ({
         symbol: 'none', // 去掉警戒线最后面的箭头
         label: {
           position: 'middle', // 将警示值放在哪个位置，三个值“start”,"middle","end"  开始  中点 结束
-          formatter: warningLineObj.value ? '预警线' + warningLineObj.value.cpu_rate + '%' : ''
+          formatter: warningLineObj.value.cpu_rate !== 0 ? '预警线' + warningLineObj.value.memory_used + 'GB' : ''
         },
         data: [{
           silent: false, // 鼠标悬停事件  true没有，false有
@@ -246,7 +276,7 @@ const cpuOption = computed(() => ({
             type: 'solid',
             color: 'rgba(238, 99, 99)'
           },
-          yAxis: warningLineObj.value ? warningLineObj.value.cpu_rate : '' // 警戒线在y轴的坐标
+          yAxis: warningLineObj.value.cpu_rate !== 0 ? warningLineObj.value.cpu_rate : '' // 警戒线在y轴的坐标
         }]
       }
     }
@@ -261,6 +291,36 @@ const memOption = computed(() => ({
   },
   tooltip: {
     trigger: 'axis'
+  },
+  toolbox: {
+    showTitle: false,
+    itemSize: 12,
+    left: 90,
+    iconStyle: {
+      color: '#1976D2'
+    },
+    feature: {
+      myTool1: {
+        show: true,
+        title: '修改预警线',
+        icon: 'path://M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z',
+        onclick: function () {
+          store.triggerModifyWarningLine(unitInstance, 'mem', warningLineObj.value.memory_used)
+        }
+      }
+    },
+    tooltip: { // 和 option.tooltip 的配置项相同
+      show: true,
+      formatter: function () {
+        return '修改预警线' // 自定义的 DOM 结构
+      },
+      borderWidth: 0,
+      backgroundColor: '#757575',
+      textStyle: {
+        color: '#FFFFFF',
+        fontSize: 12
+      }
+    }
   },
   legend: {
     top: 30,
@@ -296,7 +356,7 @@ const memOption = computed(() => ({
         symbol: 'none', // 去掉警戒线最后面的箭头
         label: {
           position: 'middle', // 将警示值放在哪个位置，三个值“start”,"middle","end"  开始  中点 结束
-          formatter: warningLineObj.value ? '预警线' + warningLineObj.value.memory_used + 'GB' : ''
+          formatter: warningLineObj.value.memory_used !== 0 ? '预警线' + warningLineObj.value.memory_used + 'GB' : ''
         },
         data: [{
           silent: false, // 鼠标悬停事件  true没有，false有
@@ -304,7 +364,7 @@ const memOption = computed(() => ({
             type: 'solid',
             color: 'rgba(238, 99, 99)'
           },
-          yAxis: warningLineObj.value ? warningLineObj.value.memory_used : '' // 警戒线在y轴的坐标
+          yAxis: warningLineObj.value.memory_used !== 0 ? warningLineObj.value.memory_used : '' // 警戒线在y轴的坐标
         }]
       }
     }
@@ -319,6 +379,36 @@ const diskOption = computed(() => ({
   },
   tooltip: {
     trigger: 'axis'
+  },
+  toolbox: {
+    showTitle: false,
+    itemSize: 12,
+    left: 90,
+    iconStyle: {
+      color: '#1976D2'
+    },
+    feature: {
+      myTool1: {
+        show: true,
+        title: '修改预警线',
+        icon: 'path://M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z',
+        onclick: function () {
+          store.triggerModifyWarningLine(unitInstance, 'disk', warningLineObj.value.disk_used)
+        }
+      }
+    },
+    tooltip: { // 和 option.tooltip 的配置项相同
+      show: true,
+      formatter: function () {
+        return '修改预警线' // 自定义的 DOM 结构
+      },
+      borderWidth: 0,
+      backgroundColor: '#757575',
+      textStyle: {
+        color: '#FFFFFF',
+        fontSize: 12
+      }
+    }
   },
   legend: {
     top: 30,
@@ -354,7 +444,7 @@ const diskOption = computed(() => ({
         symbol: 'none', // 去掉警戒线最后面的箭头
         label: {
           position: 'middle', // 将警示值放在哪个位置，三个值“start”,"middle","end"  开始  中点 结束
-          formatter: warningLineObj.value ? '预警线' + warningLineObj.value.disk_used + 'GB' : ''
+          formatter: warningLineObj.value.disk_used !== 0 ? '预警线' + warningLineObj.value.disk_used + 'GB' : ''
         },
         data: [{
           silent: false, // 鼠标悬停事件  true没有，false有
@@ -362,7 +452,7 @@ const diskOption = computed(() => ({
             type: 'solid',
             color: 'rgba(238, 99, 99)'
           },
-          yAxis: warningLineObj.value ? warningLineObj.value.disk_used : '' // 警戒线在y轴的坐标
+          yAxis: warningLineObj.value.disk_used !== 0 ? warningLineObj.value.disk_used : '' // 警戒线在y轴的坐标
         }]
       }
     }
@@ -471,6 +561,7 @@ const socketOption = computed(() => ({
   },
   legend: {
     top: 30,
+    type: 'scroll',
     data: ['CurrEstab', 'TCP_Tw', 'Socket_Used', 'UDP_Inuse', 'TCP_Alloc', 'TCP_InSegs', 'TCP_OutSegs', 'TCP_RetransSegs']
   },
   grid: {
@@ -530,20 +621,104 @@ const socketOption = computed(() => ({
     }
   ]
 }))
+const flowOption = computed(() => ({
+  title: {
+    text: '每分钟流量',
+    textStyle: {
+      fontSize: 15
+    }
+  },
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'shadow'
+    }
+  },
+  legend: {},
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: [
+    {
+      type: 'category',
+      data: xAxis.value
+    }
+  ],
+  yAxis: [
+    {
+      type: 'value'
+    }
+  ],
+  series: [
+    {
+      name: '下载',
+      type: 'bar',
+      stack: 'flow',
+      emphasis: {
+        focus: 'series'
+      },
+      data: networkChartData.value.flow.download
+    },
+    {
+      name: '上传',
+      type: 'bar',
+      stack: 'flow',
+      emphasis: {
+        focus: 'series'
+      },
+      data: networkChartData.value.flow.upload
+    }
+  ]
+}))
 const search = () => {
   if (queryText.value === '') {
-    unitList.value = allUnitList.value
+    unitList.value = allUnitList
   } else {
-    unitList.value = allUnitList.value.filter(item => item.instance.indexOf(queryText.value) !== -1)
+    unitList.value = allUnitList.filter(item => item.instance.indexOf(queryText.value) !== -1)
+  }
+}
+const getWarnLine = async (instance: string) => {
+  const warningRes = await aiops.mail.getMetricWarning({ query: { instance } })
+  if (warningRes.data.results.length > 0) {
+    warningLineObj.value = warningRes.data.results[0]
+  } else {
+    warningLineObj.value.instance = instance
+    warningLineObj.value.cpu_rate = 0
+    warningLineObj.value.memory_used = 0
+    warningLineObj.value.disk_used = 0
   }
 }
 const getDetail = async (instance: string) => {
+  active.value = instance
+  unitInstance = instance
+  await getWarnLine(instance)
   xAxis.value = []
   resourcesChartData.value.cpu.total = []
   resourcesChartData.value.cpu.user = []
   resourcesChartData.value.cpu.disk = []
   resourcesChartData.value.cpu.sys = []
-  active.value = instance
+  resourcesChartData.value.mem.total = []
+  resourcesChartData.value.mem.use = []
+  resourcesChartData.value.disk.total = []
+  resourcesChartData.value.disk.use = []
+  performanceChartData.value.load.one = []
+  performanceChartData.value.load.five = []
+  performanceChartData.value.load.fifteen = []
+  networkChartData.value.bandwidth.upload = []
+  networkChartData.value.bandwidth.download = []
+  networkChartData.value.flow.upload = []
+  networkChartData.value.flow.download = []
+  networkChartData.value.socket.currEstab = []
+  networkChartData.value.socket.tw = []
+  networkChartData.value.socket.used = []
+  networkChartData.value.socket.inuse = []
+  networkChartData.value.socket.alloc = []
+  networkChartData.value.socket.inSegs = []
+  networkChartData.value.socket.outSegs = []
+  networkChartData.value.socket.retransSegs = []
   const metricRes = await aiops.mail.getMailMetric({
     query: {
       timestamp__gte: Number(date.formatDate(startTime.value, 'X')),
@@ -568,6 +743,8 @@ const getDetail = async (instance: string) => {
     performanceChartData.value.load.fifteen.unshift(item.node_load15)
     networkChartData.value.bandwidth.upload.unshift((Number(item.network_transmit) / 1024 / 1024).toFixed(2))
     networkChartData.value.bandwidth.download.unshift((Number(item.network_receive) / 1024 / 1024).toFixed(2))
+    networkChartData.value.flow.upload.unshift((Number(item.netflow_transmit) / 1024 / 1024).toFixed(2))
+    networkChartData.value.flow.download.unshift((Number(item.netflow_receive) / 1024 / 1024).toFixed(2))
     networkChartData.value.socket.currEstab.unshift(Number(item.socket_CurrEstab).toFixed(2))
     networkChartData.value.socket.tw.unshift(Number(item.socket_TCP_tw).toFixed(2))
     networkChartData.value.socket.used.unshift(Number(item.socket_Sockets_used).toFixed(2))
@@ -577,21 +754,30 @@ const getDetail = async (instance: string) => {
     networkChartData.value.socket.outSegs.unshift(Number(item.socket_Tcp_OutSegs).toFixed(2))
     networkChartData.value.socket.retransSegs.unshift(Number(item.socket_Tcp_RetransSegs).toFixed(2))
   })
-  const warningRes = await aiops.mail.getMetricWarning({ query: { instance } })
-  warningLineObj.value = warningRes.data.results[0]
   isRight.value = true
 }
 const changeUnit = async (val: Record<string, string>) => {
   const res = await aiops.mail.getMailMachine({ query: { category: val.value, page: 1, page_size: 100 } })
   unitList.value = res.data.results
-  allUnitList.value = res.data.results
+  allUnitList = res.data.results
 }
 changeUnit(unitQuery.value)
+const changeTime = () => {
+  getDetail(unitInstance)
+}
+$bus.on('warn', async (value: boolean) => {
+  if (value) {
+    await getWarnLine(unitInstance)
+  }
+})
+onBeforeUnmount(() => {
+  $bus.off('warn')
+})
 </script>
 
 <template>
-  <div class="MailSystemList column" style="height: calc(100vh - 120px)">
-    <div class="row justify-between col-1">
+  <div class="MailSystemList">
+    <div class="row justify-between q-mt-md">
       <div class="row col-3 items-center justify-between">
         <div class="text-subtitle1">监控单元</div>
         <q-select outlined dense v-model="unitQuery" :options="unitOptions" label="请选择" class="col-9"
@@ -603,7 +789,7 @@ changeUnit(unitQuery.value)
           <template v-slot:prepend>
             <q-icon name="event" class="cursor-pointer">
               <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                <q-date v-model="startTime" mask="YYYY-MM-DD HH:mm">
+                <q-date v-model="startTime" mask="YYYY-MM-DD HH:mm" @update:model-value="changeTime">
                   <div class="row items-center justify-end">
                     <q-btn v-close-popup label="Close" color="primary" flat/>
                   </div>
@@ -611,11 +797,10 @@ changeUnit(unitQuery.value)
               </q-popup-proxy>
             </q-icon>
           </template>
-
           <template v-slot:append>
             <q-icon name="access_time" class="cursor-pointer">
               <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                <q-time v-model="startTime" mask="YYYY-MM-DD HH:mm" format24h>
+                <q-time v-model="startTime" mask="YYYY-MM-DD HH:mm" format24h @update:model-value="changeTime">
                   <div class="row items-center justify-end">
                     <q-btn v-close-popup label="Close" color="primary" flat/>
                   </div>
@@ -629,7 +814,7 @@ changeUnit(unitQuery.value)
           <template v-slot:prepend>
             <q-icon name="event" class="cursor-pointer">
               <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                <q-date v-model="endTime" mask="YYYY-MM-DD HH:mm">
+                <q-date v-model="endTime" mask="YYYY-MM-DD HH:mm" @update:model-value="changeTime">
                   <div class="row items-center justify-end">
                     <q-btn v-close-popup label="Close" color="primary" flat/>
                   </div>
@@ -637,11 +822,10 @@ changeUnit(unitQuery.value)
               </q-popup-proxy>
             </q-icon>
           </template>
-
           <template v-slot:append>
             <q-icon name="access_time" class="cursor-pointer">
               <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                <q-time v-model="endTime" mask="YYYY-MM-DD HH:mm" format24h>
+                <q-time v-model="endTime" mask="YYYY-MM-DD HH:mm" format24h @update:model-value="changeTime">
                   <div class="row items-center justify-end">
                     <q-btn v-close-popup label="Close" color="primary" flat/>
                   </div>
@@ -652,8 +836,8 @@ changeUnit(unitQuery.value)
         </q-input>
       </div>
     </div>
-    <div class="row col-10">
-      <q-card flat bordered class="col-3 q-px-xs" style="height: 100%">
+    <div class="row q-mt-md">
+      <q-card flat bordered class="col-3 q-px-xs column">
         <q-input
           class="q-my-sm"
           input-class="cursor-pointer"
@@ -667,7 +851,7 @@ changeUnit(unitQuery.value)
             <q-icon name="lab la-sistrix" class="cursor-pointer"></q-icon>
           </template>
         </q-input>
-        <q-scroll-area style="height: 90%">
+        <q-scroll-area class="col" style="min-height: 630px">
           <q-list v-if="unitList.length > 0">
             <q-item
               :class="{'bg-blue-1': active === item.instance}"
@@ -774,7 +958,6 @@ changeUnit(unitQuery.value)
             </div>
           </q-card-section>
         </q-card>
-        <div style="height: 100%">
           <q-tabs
             v-model="tab"
             style="width: 300px"
@@ -789,19 +972,17 @@ changeUnit(unitQuery.value)
             <q-tab name="log" label="日志信息"/>
             <q-tab name="warn" label="告警信息"/>
           </q-tabs>
-
           <q-separator/>
-
-          <q-tab-panels v-model="tab" animated style="height: 100%">
+          <q-tab-panels v-model="tab" animated>
             <q-tab-panel name="sequential">
-              <q-scroll-area style="height: 70%">
-                <q-list bordered>
-                  <q-expansion-item
+              <q-list bordered>
+                <q-expansion-item
                     switch-toggle-side
                     expand-separator
                     default-opened
                     label="资源"
                   >
+                  <q-separator/>
                     <q-card>
                       <q-card-section class="row">
                         <div class="col-6">
@@ -816,12 +997,13 @@ changeUnit(unitQuery.value)
                       </q-card-section>
                     </q-card>
                   </q-expansion-item>
-                  <q-expansion-item
+                <q-expansion-item
                     switch-toggle-side
                     expand-separator
                     default-opened
                     label="性能"
                   >
+                  <q-separator/>
                     <q-card>
                       <q-card-section class="row">
                         <div class="col-6">
@@ -830,43 +1012,40 @@ changeUnit(unitQuery.value)
                       </q-card-section>
                     </q-card>
                   </q-expansion-item>
-                  <q-expansion-item
+                <q-expansion-item
                     switch-toggle-side
                     expand-separator
                     default-opened
                     label="网络"
                   >
+                  <q-separator/>
                     <q-card>
                       <q-card-section class="row">
                         <div class="col-6">
                           <line-chart :option="bandwidthOption"/>
                         </div>
-<!--                        <div class="col-6">-->
-<!--                          <line-chart :option="cpuOption"/>-->
-<!--                        </div>-->
                         <div class="col-6">
+                          <histogram-chart :option="flowOption"/>
+                        </div>
+                        <div class="col-6 q-mt-lg">
                           <line-chart :option="socketOption"/>
                         </div>
                       </q-card-section>
                     </q-card>
                   </q-expansion-item>
                 </q-list>
-              </q-scroll-area>
             </q-tab-panel>
-
             <q-tab-panel name="log">
               <div class="text-h6">
                 待上线中
               </div>
             </q-tab-panel>
-
             <q-tab-panel name="warn">
               <div class="text-h6">
                 待上线中
               </div>
             </q-tab-panel>
           </q-tab-panels>
-        </div>
       </div>
       <!-- 无数据 -->
       <div v-else class="column justify-center items-center transform-no-data" style="flex: 1">
