@@ -17,6 +17,7 @@ import { logs } from 'src/configs/logs'
 // const emits = defineEmits(['change', 'delete'])
 
 const store = useStore()
+void store.loadAllTables()
 // const router = useRouter()
 // const route = useRoute()
 const tc = i18n.global.tc
@@ -107,7 +108,7 @@ const appVersion = logs[0].version
     </q-drawer>
 
     <q-page-container>
-      <q-scroll-area style="height: calc(100vh - 50px)">
+      <q-scroll-area style="height: calc(100vh - 70px)">
         <router-view/>
       </q-scroll-area>
     </q-page-container>

@@ -19,11 +19,11 @@ export default {
       }
       return axiosService.get('/monitor/website', config)
     },
-    postMonitorWebsite (payload: { body: { name: string; url: string; remark?: string } }) {
+    postMonitorWebsite (payload: { body: { name: string; scheme: string; hostname: string; uri: string; is_tamper_resistant?: boolean; remark?: string } }) {
       const data = payload.body
       return axiosService.post('/monitor/website', data)
     },
-    putMonitorWebsite (payload: { body: { name: string; url: string; remark?: string }, path: { id: string } }) {
+    putMonitorWebsite (payload: { body: { name: string; scheme: string; hostname: string; uri: string; is_tamper_resistant?: boolean; remark?: string }, path: { id: string } }) {
       const data = payload.body
       return axiosService.put('/monitor/website/' + payload.path.id, data)
     },

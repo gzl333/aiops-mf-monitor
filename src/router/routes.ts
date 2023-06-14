@@ -20,15 +20,23 @@ const routes: RouteRecordRaw[] = [
         children: [
           {
             path: 'overall',
-            component: () => import('pages/web/WebOverall.vue')
+            component: () => import('pages/web/overall/WebOverall.vue')
           },
           {
             path: 'accessibility',
-            component: () => import('pages/web/WebAccessibility.vue')
+            component: () => import('pages/web/accessibility/WebAccessibility.vue')
           },
           {
             path: 'tamper',
-            component: () => import('pages/web/WebTamper.vue')
+            component: () => import('pages/web/tamper/WebTamper.vue')
+          },
+          {
+            path: 'create',
+            component: () => import('pages/web/WebMonitorTaskCreate.vue')
+          },
+          {
+            path: 'detail/:webMonitorTaskId',
+            component: () => import('pages/web/accessibility/WebMonitorDetailIndex.vue')
           }
         ]
       },

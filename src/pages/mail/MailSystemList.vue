@@ -268,7 +268,7 @@ const cpuOption = computed(() => ({
         symbol: 'none', // 去掉警戒线最后面的箭头
         label: {
           position: 'middle', // 将警示值放在哪个位置，三个值“start”,"middle","end"  开始  中点 结束
-          formatter: warningLineObj.value.cpu_rate !== 0 ? '预警线' + warningLineObj.value.memory_used + 'GB' : ''
+          formatter: warningLineObj.value.cpu_rate !== 0 ? '预警线' + warningLineObj.value.cpu_rate + '%' : ''
         },
         data: [{
           silent: false, // 鼠标悬停事件  true没有，false有
@@ -673,6 +673,758 @@ const flowOption = computed(() => ({
     }
   ]
 }))
+const columns = [
+  {
+    name: 'index',
+    label: '序号',
+    required: true,
+    align: 'left',
+    field: 'index'
+  },
+  {
+    name: 'time',
+    required: true,
+    label: '时间戳',
+    align: 'left',
+    field: row => row.time,
+    format: val => `${val}`,
+    sortable: true
+  },
+  { name: 'logType', align: 'left', label: '日志类型', field: 'logType', sortable: true },
+  {
+    name: 'info',
+    align: 'left',
+    label: '日志信息',
+    field: 'info',
+    sortable: false
+  }
+]
+const rows = ref([
+  {
+    time: '2023-04-10 09:30:42',
+    logType: 'access',
+    info: {
+      '@timestamp': [
+        '2023-03-10T01:30:42.293Z'
+      ],
+      '@version': [
+        '1'
+      ],
+      '@version.keyword': [
+        '1'
+      ],
+      'agent.ephemeral_id': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.ephemeral_id.keyword': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.hostname': [
+        'MySQLSalve'
+      ],
+      'agent.hostname.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.id': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.id.keyword': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.name': [
+        'MySQLSalve'
+      ],
+      'agent.name.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.type': [
+        'filebeat'
+      ],
+      'agent.type.keyword': [
+        'filebeat'
+      ],
+      'agent.version': [
+        '7.9.3'
+      ],
+      'agent.version.keyword': [
+        '7.9.3'
+      ],
+      'ecs.version': [
+        '1.5.0'
+      ],
+      'ecs.version.keyword': [
+        '1.5.0'
+      ],
+      'fields.log_source': [
+        'MySQLSalve.err'
+      ],
+      'fields.log_source.keyword': [
+        'MySQLSalve.err'
+      ],
+      'host.name': [
+        'MySQLSalve'
+      ],
+      'host.name.keyword': [
+        'MySQLSalve'
+      ],
+      'input.type': [
+        'log'
+      ],
+      'input.type.keyword': [
+        'log'
+      ],
+      'log.file.path': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.file.path.keyword': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.offset': [
+        19763193
+      ],
+      message: [
+        '2023-03-10T01:30:36.068865Z 539948 [Note] Got an error reading communication packets'
+      ],
+      _id: 'LqkkyYYBFZpIWJgLWx7O',
+      _index: 'mail_mysqlsalve.err.log-2023.03',
+      _score: null
+    }
+  },
+  {
+    time: '2023-04-10 09:30:42',
+    logType: 'error',
+    info: {
+      '@timestamp': [
+        '2023-03-10T01:30:42.293Z'
+      ],
+      '@version': [
+        '1'
+      ],
+      '@version.keyword': [
+        '1'
+      ],
+      'agent.ephemeral_id': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.ephemeral_id.keyword': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.hostname': [
+        'MySQLSalve'
+      ],
+      'agent.hostname.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.id': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.id.keyword': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.name': [
+        'MySQLSalve'
+      ],
+      'agent.name.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.type': [
+        'filebeat'
+      ],
+      'agent.type.keyword': [
+        'filebeat'
+      ],
+      'agent.version': [
+        '7.9.3'
+      ],
+      'agent.version.keyword': [
+        '7.9.3'
+      ],
+      'ecs.version': [
+        '1.5.0'
+      ],
+      'ecs.version.keyword': [
+        '1.5.0'
+      ],
+      'fields.log_source': [
+        'MySQLSalve.err'
+      ],
+      'fields.log_source.keyword': [
+        'MySQLSalve.err'
+      ],
+      'host.name': [
+        'MySQLSalve'
+      ],
+      'host.name.keyword': [
+        'MySQLSalve'
+      ],
+      'input.type': [
+        'log'
+      ],
+      'input.type.keyword': [
+        'log'
+      ],
+      'log.file.path': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.file.path.keyword': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.offset': [
+        19763193
+      ],
+      message: [
+        '2023-03-10T01:30:36.068865Z 539948 [Note] Got an error reading communication packets'
+      ],
+      _id: 'LqkkyYYBFZpIWJgLWx7O',
+      _index: 'mail_mysqlsalve.err.log-2023.03',
+      _score: null
+    }
+  },
+  {
+    time: '2023-04-10 09:30:42',
+    logType: 'access',
+    info: {
+      '@timestamp': [
+        '2023-03-10T01:30:42.293Z'
+      ],
+      '@version': [
+        '1'
+      ],
+      '@version.keyword': [
+        '1'
+      ],
+      'agent.ephemeral_id': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.ephemeral_id.keyword': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.hostname': [
+        'MySQLSalve'
+      ],
+      'agent.hostname.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.id': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.id.keyword': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.name': [
+        'MySQLSalve'
+      ],
+      'agent.name.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.type': [
+        'filebeat'
+      ],
+      'agent.type.keyword': [
+        'filebeat'
+      ],
+      'agent.version': [
+        '7.9.3'
+      ],
+      'agent.version.keyword': [
+        '7.9.3'
+      ],
+      'ecs.version': [
+        '1.5.0'
+      ],
+      'ecs.version.keyword': [
+        '1.5.0'
+      ],
+      'fields.log_source': [
+        'MySQLSalve.err'
+      ],
+      'fields.log_source.keyword': [
+        'MySQLSalve.err'
+      ],
+      'host.name': [
+        'MySQLSalve'
+      ],
+      'host.name.keyword': [
+        'MySQLSalve'
+      ],
+      'input.type': [
+        'log'
+      ],
+      'input.type.keyword': [
+        'log'
+      ],
+      'log.file.path': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.file.path.keyword': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.offset': [
+        19763193
+      ],
+      message: [
+        '  "192.168.240.10 - - [27/Mar/2023:23:56:49 +0800]  GET /images/@kibana-highlighted-field@err@/kibana-highlighted-field@.png HTTP/1.1  404 393  -   Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_0) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11 108.93.87.83, 124.70.89.241 0.000 0.001"'
+      ],
+      _id: 'LqkkyYYBFZpIWJgLWx7O',
+      _index: 'mail_mysqlsalve.err.log-2023.03',
+      _score: null
+    }
+  },
+  {
+    time: '2023-04-10 09:30:42',
+    logType: 'error',
+    info: {
+      '@timestamp': [
+        '2023-03-10T01:30:42.293Z'
+      ],
+      '@version': [
+        '1'
+      ],
+      '@version.keyword': [
+        '1'
+      ],
+      'agent.ephemeral_id': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.ephemeral_id.keyword': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.hostname': [
+        'MySQLSalve'
+      ],
+      'agent.hostname.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.id': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.id.keyword': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.name': [
+        'MySQLSalve'
+      ],
+      'agent.name.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.type': [
+        'filebeat'
+      ],
+      'agent.type.keyword': [
+        'filebeat'
+      ],
+      'agent.version': [
+        '7.9.3'
+      ],
+      'agent.version.keyword': [
+        '7.9.3'
+      ],
+      'ecs.version': [
+        '1.5.0'
+      ],
+      'ecs.version.keyword': [
+        '1.5.0'
+      ],
+      'fields.log_source': [
+        'MySQLSalve.err'
+      ],
+      'fields.log_source.keyword': [
+        'MySQLSalve.err'
+      ],
+      'host.name': [
+        'MySQLSalve'
+      ],
+      'host.name.keyword': [
+        'MySQLSalve'
+      ],
+      'input.type': [
+        'log'
+      ],
+      'input.type.keyword': [
+        'log'
+      ],
+      'log.file.path': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.file.path.keyword': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.offset': [
+        19763193
+      ],
+      message: [
+        '2023-03-10T01:30:36.068865Z 539948 [Note] Got an error reading communication packets'
+      ],
+      _id: 'LqkkyYYBFZpIWJgLWx7O',
+      _index: 'mail_mysqlsalve.err.log-2023.03',
+      _score: null
+    }
+  },
+  {
+    time: '2023-04-10 09:30:42',
+    logType: 'access',
+    info: {
+      '@timestamp': [
+        '2023-03-10T01:30:42.293Z'
+      ],
+      '@version': [
+        '1'
+      ],
+      '@version.keyword': [
+        '1'
+      ],
+      'agent.ephemeral_id': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.ephemeral_id.keyword': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.hostname': [
+        'MySQLSalve'
+      ],
+      'agent.hostname.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.id': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.id.keyword': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.name': [
+        'MySQLSalve'
+      ],
+      'agent.name.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.type': [
+        'filebeat'
+      ],
+      'agent.type.keyword': [
+        'filebeat'
+      ],
+      'agent.version': [
+        '7.9.3'
+      ],
+      'agent.version.keyword': [
+        '7.9.3'
+      ],
+      'ecs.version': [
+        '1.5.0'
+      ],
+      'ecs.version.keyword': [
+        '1.5.0'
+      ],
+      'fields.log_source': [
+        'MySQLSalve.err'
+      ],
+      'fields.log_source.keyword': [
+        'MySQLSalve.err'
+      ],
+      'host.name': [
+        'MySQLSalve'
+      ],
+      'host.name.keyword': [
+        'MySQLSalve'
+      ],
+      'input.type': [
+        'log'
+      ],
+      'input.type.keyword': [
+        'log'
+      ],
+      'log.file.path': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.file.path.keyword': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.offset': [
+        19763193
+      ],
+      message: [
+        '2023-03-10T01:30:36.068865Z 539948 [Note] Got an error reading communication packets'
+      ],
+      _id: 'LqkkyYYBFZpIWJgLWx7O',
+      _index: 'mail_mysqlsalve.err.log-2023.03',
+      _score: null
+    }
+  },
+  {
+    time: '2023-04-10 09:30:42',
+    logType: 'access',
+    info: {
+      '@timestamp': [
+        '2023-03-10T01:30:42.293Z'
+      ],
+      '@version': [
+        '1'
+      ],
+      '@version.keyword': [
+        '1'
+      ],
+      'agent.ephemeral_id': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.ephemeral_id.keyword': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.hostname': [
+        'MySQLSalve'
+      ],
+      'agent.hostname.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.id': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.id.keyword': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.name': [
+        'MySQLSalve'
+      ],
+      'agent.name.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.type': [
+        'filebeat'
+      ],
+      'agent.type.keyword': [
+        'filebeat'
+      ],
+      'agent.version': [
+        '7.9.3'
+      ],
+      'agent.version.keyword': [
+        '7.9.3'
+      ],
+      'ecs.version': [
+        '1.5.0'
+      ],
+      'ecs.version.keyword': [
+        '1.5.0'
+      ],
+      'fields.log_source': [
+        'MySQLSalve.err'
+      ],
+      'fields.log_source.keyword': [
+        'MySQLSalve.err'
+      ],
+      'host.name': [
+        'MySQLSalve'
+      ],
+      'host.name.keyword': [
+        'MySQLSalve'
+      ],
+      'input.type': [
+        'log'
+      ],
+      'input.type.keyword': [
+        'log'
+      ],
+      'log.file.path': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.file.path.keyword': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.offset': [
+        19763193
+      ],
+      message: [
+        '2023-03-10T01:30:36.068865Z 539948 [Note] Got an error reading communication packets'
+      ],
+      _id: 'LqkkyYYBFZpIWJgLWx7O',
+      _index: 'mail_mysqlsalve.err.log-2023.03',
+      _score: null
+    }
+  },
+  {
+    time: '2023-04-10 09:30:42',
+    logType: 'access',
+    info: {
+      '@timestamp': [
+        '2023-03-10T01:30:42.293Z'
+      ],
+      '@version': [
+        '1'
+      ],
+      '@version.keyword': [
+        '1'
+      ],
+      'agent.ephemeral_id': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.ephemeral_id.keyword': [
+        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
+      ],
+      'agent.hostname': [
+        'MySQLSalve'
+      ],
+      'agent.hostname.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.id': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.id.keyword': [
+        'bbc21242-aff0-4d39-a243-a4df2839f64c'
+      ],
+      'agent.name': [
+        'MySQLSalve'
+      ],
+      'agent.name.keyword': [
+        'MySQLSalve'
+      ],
+      'agent.type': [
+        'filebeat'
+      ],
+      'agent.type.keyword': [
+        'filebeat'
+      ],
+      'agent.version': [
+        '7.9.3'
+      ],
+      'agent.version.keyword': [
+        '7.9.3'
+      ],
+      'ecs.version': [
+        '1.5.0'
+      ],
+      'ecs.version.keyword': [
+        '1.5.0'
+      ],
+      'fields.log_source': [
+        'MySQLSalve.err'
+      ],
+      'fields.log_source.keyword': [
+        'MySQLSalve.err'
+      ],
+      'host.name': [
+        'MySQLSalve'
+      ],
+      'host.name.keyword': [
+        'MySQLSalve'
+      ],
+      'input.type': [
+        'log'
+      ],
+      'input.type.keyword': [
+        'log'
+      ],
+      'log.file.path': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.file.path.keyword': [
+        '/home/coremail/var/mysql/MySQLSalve.err'
+      ],
+      'log.offset': [
+        19763193
+      ],
+      message: [
+        '2023-03-10T01:30:36.068865Z 539948 [Note] Got an error reading communication packets'
+      ],
+      _id: 'LqkkyYYBFZpIWJgLWx7O',
+      _index: 'mail_mysqlsalve.err.log-2023.03',
+      _score: null
+    }
+  }
+])
+const columns1 = [
+  {
+    name: 'index',
+    label: '序号',
+    align: 'left',
+    field: 'index'
+  },
+  {
+    name: 'name',
+    required: true,
+    label: '告警名称',
+    align: 'left',
+    field: 'name',
+    sortable: false
+  },
+  {
+    name: 'time',
+    required: true,
+    label: '触发时间',
+    align: 'left',
+    field: row => row.time,
+    format: val => `${val}`,
+    sortable: true
+  },
+  { name: 'type', align: 'left', label: '告警类型', field: 'type', sortable: false },
+  { name: 'rule', align: 'left', label: '告警规则', field: 'rule', sortable: false },
+  { name: 'level', align: 'left', label: '告警级别', field: 'level', sortable: false },
+  { name: 'state', align: 'left', label: '处理状态', field: 'state', sortable: false }
+]
+const rows1 = ref([
+  {
+    id: '00001',
+    name: 'user-serivce提供请求延时过高',
+    time: '2023-04-10 09:30:42',
+    type: '应用监控报警',
+    rule: '最近3分钟应用提供服务调用响应时间_ms大于等于500',
+    level: '严重',
+    state: '待处理'
+  },
+  {
+    id: '00002',
+    name: 'user-service提供请求成功率下跌',
+    time: '2023-04-10 09:30:42',
+    type: '应用监控报警',
+    rule: '最近3分钟应用提供服务调用响应时间_ms大于等于500',
+    level: '严重',
+    state: '待处理'
+  },
+  {
+    id: '00003',
+    name: 'user-service提供请求成功率下跌',
+    time: '2023-04-10 09:30:42',
+    type: '应用监控报警',
+    rule: '最近3分钟应用提供服务调用响应时间_ms大于等于500',
+    level: '严重',
+    state: '待处理'
+  },
+  {
+    id: '00004',
+    name: 'user-service提供请求成功率下跌',
+    time: '2023-04-10 09:30:42',
+    type: '应用监控报警',
+    rule: '最近3分钟应用提供服务调用响应时间_ms大于等于500',
+    level: '一般',
+    state: '待处理'
+  },
+  {
+    id: '00005',
+    name: 'user-service提供请求成功率下跌',
+    time: '2023-04-10 09:30:42',
+    type: '应用监控报警',
+    rule: '最近3分钟应用提供服务调用响应时间_ms大于等于500',
+    level: '一般',
+    state: '待处理'
+  },
+  {
+    id: '00006',
+    name: 'user-service提供请求成功率下跌',
+    time: '2023-04-10 09:30:42',
+    type: '应用监控报警',
+    rule: '最近3分钟应用提供服务调用响应时间_ms大于等于500',
+    level: '严重',
+    state: '已完成'
+  },
+  {
+    id: '00007',
+    name: 'user-service提供请求成功率下跌',
+    time: '2023-04-10 09:30:42',
+    type: '应用监控报警',
+    rule: '最近3分钟应用提供服务调用响应时间_ms大于等于500',
+    level: '严重',
+    state: '处理中'
+  }
+])
 const search = () => {
   if (queryText.value === '') {
     unitList.value = allUnitList
@@ -728,7 +1480,6 @@ const getDetail = async (instance: string) => {
   })
   cardInfo.value = metricRes.data.results
   metricRes.data.results.forEach((item: UnitMetricInterface) => {
-    // console.log(item)
     xAxis.value.unshift(date.formatDate(item.timestamp * 1000, 'HH:mm'))
     resourcesChartData.value.cpu.total.unshift(Number(item.cpu_rate).toFixed(2))
     resourcesChartData.value.cpu.user.unshift(Number(item.cpu_user_rate).toFixed(2))
@@ -1025,7 +1776,7 @@ onBeforeUnmount(() => {
                           <line-chart :option="bandwidthOption"/>
                         </div>
                         <div class="col-6">
-                          <histogram-chart :option="flowOption"/>
+                          <histogram-chart :option="flowOption" height="220"/>
                         </div>
                         <div class="col-6 q-mt-lg">
                           <line-chart :option="socketOption"/>
@@ -1036,14 +1787,86 @@ onBeforeUnmount(() => {
                 </q-list>
             </q-tab-panel>
             <q-tab-panel name="log">
-              <div class="text-h6">
-                待上线中
-              </div>
+              <q-table
+                class="my-sticky-column-table"
+                flat
+                bordered
+                :rows="rows"
+                :table-header-style="{ backgroundColor: 'rgb(239, 240, 244)' }"
+                :columns="columns"
+                row-key="name"
+              >
+                <template v-slot:body="props">
+                  <q-tr :props="props">
+                    <q-td key="index" auto-width>
+                      {{ props.row.index }}
+                    </q-td>
+                    <q-td key="time" auto-width>
+                      {{ props.row.time }}
+                    </q-td>
+                    <q-td key="type" auto-width>
+                      <q-chip v-show="props.row.logType === 'error'" square dense color="aiops-negative" text-color="white" :label="props.row.logType" />
+                      <q-chip v-show="props.row.logType !== 'error'" square dense :label="props.row.logType" />
+                    </q-td>
+                    <q-td key="info" style="max-width: 500px; white-space: pre-wrap;">
+                      <div class="row wrap">
+                        <div
+                          v-for="(value, key, index) in props.row.info"
+                          :key="index"
+                          :class="[
+                  {'col-6': key !== 'message'},
+                  {'ellipsis': key !== 'message'},
+                  {'bg-aiops-hover-primary': key === 'message'},
+                  {'col-12': key === 'message'},
+                  'q-pr-sm'
+                ]"
+                        >
+                          {{ key }}: {{ value }}
+                        </div>
+                      </div>
+                    </q-td>
+                  </q-tr>
+                </template>
+              </q-table>
             </q-tab-panel>
             <q-tab-panel name="warn">
-              <div class="text-h6">
-                待上线中
-              </div>
+              <q-table
+                class="my-sticky-column-table"
+                flat
+                bordered
+                :rows="rows1"
+                :table-header-style="{ backgroundColor: 'rgb(239, 240, 244)' }"
+                :columns="columns1"
+                :rows-per-page-options="[5, 10, 15, 20, 25, 50]"
+                :pagination="{ rowsPerPage: 10 }"
+                row-key="id"
+              >
+                <template v-slot:body="props">
+                  <q-tr :props="props">
+                    <q-td key="index" auto-width>
+                      {{ props.row.index }}
+                    </q-td>
+                    <q-td key="name" auto-width>
+                      {{ props.row.name }}
+                    </q-td>
+                    <q-td key="time" auto-width>
+                      {{ props.row.time }}
+                    </q-td>
+                    <q-td key="type" auto-width>
+                      {{ props.row.type }}
+                    </q-td>
+                    <q-td key="rule" auto-width>
+                      {{ props.row.rule }}
+                    </q-td>
+                    <q-td key="level" auto-width>
+                      {{ props.row.level }}
+                    </q-td>
+                    <q-td key="state" auto-width>
+                      {{ props.row.state }}
+                    </q-td>
+                  </q-tr>
+                </template>
+              </q-table>
             </q-tab-panel>
           </q-tab-panels>
       </div>

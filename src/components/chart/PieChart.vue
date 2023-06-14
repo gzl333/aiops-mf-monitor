@@ -1,14 +1,22 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, toRefs } from 'vue'
-import * as echarts from 'echarts'
+import * as echarts from 'echarts/core'
+import { TooltipComponent, LegendComponent } from 'echarts/components'
+import { PieChart } from 'echarts/charts'
+import { LabelLayout } from 'echarts/features'
+import { CanvasRenderer } from 'echarts/renderers'
+
+echarts.use([
+  TooltipComponent,
+  LegendComponent,
+  PieChart,
+  CanvasRenderer,
+  LabelLayout
+])
 
 const props = defineProps({
   option: {
     type: Object,
-    required: true
-  },
-  height: {
-    type: String,
     required: true
   }
 })
@@ -32,12 +40,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="HistogramChart" style="width: 100%">
-    <div ref="container" :style="{ width: '100%', height: props?.height + 'px' }"></div>
+  <div class="LineChart" style="width: 100%">
+    <div ref="container" :style="{ height: '220px' }"></div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.HistogramChart {
+.LineChart {
 }
 </style>
