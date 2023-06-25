@@ -20,13 +20,9 @@ export default {
       }
       return axiosAiops.get('v1/mail/machine/', config)
     },
-    // 获取监控数据
-    getMailMetric (payload: {query: {
-        timestamp?: number,
-        timestamp__lt?: number,
-        timestamp__gt?: number,
-        timestamp__gte?: number,
-        timestamp__lte?: number
+    // 获取指标
+    getMailMetricField (payload: {query: {
+        category?: string,
         instance?: string,
         ordering?: string,
         page?: number,
@@ -35,7 +31,25 @@ export default {
       const config = {
         params: payload.query
       }
-      return axiosAiops.get('v1/mail/metric/', config)
+      return axiosAiops.get('v1/mail/machine/field/', config)
+    },
+    // 获取监控数据
+    getMailMetric (payload: {query: {
+        timestamp?: number,
+        timestamp__lt?: number,
+        timestamp__gt?: number,
+        timestamp__gte?: number,
+        timestamp__lte?: number
+        instance?: string,
+        field?: string,
+        ordering?: string,
+        page?: number,
+        page_size?: number
+      }}) {
+      const config = {
+        params: payload.query
+      }
+      return axiosAiops.get('v1/mail/metric/value/', config)
     },
     // 获取预警线
     getMetricWarning (payload: {query: {
@@ -47,7 +61,7 @@ export default {
       const config = {
         params: payload.query
       }
-      return axiosAiops.get('v1/mail/metric/warning/', config)
+      return axiosAiops.get('v1/mail/machine/threshold/', config)
     },
     // 修改预警线
     postMetricWarning (payload: {body: {

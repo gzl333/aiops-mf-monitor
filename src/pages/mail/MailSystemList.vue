@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount } from 'vue'
 // import { navigateToUrl } from 'single-spa'
-import { UnitInterface, UnitMetricInterface, useStore } from 'stores/store'
+import { UnitInterface, useStore } from 'stores/store'
 // import { useRoute, useRouter } from 'vue-router'
 // import { i18n } from 'boot/i18n'
 import aiops from 'src/api/aiops'
@@ -10,6 +10,7 @@ import $bus from 'src/hooks/bus'
 import MyNoData from 'components/mail/MyNoData.vue'
 import LineChart from 'components/chart/LineChart.vue'
 import HistogramChart from 'components/chart/HistogramChart.vue'
+import HeaderInformation from 'components/mail/HeaderInformation.vue'
 // const props = defineProps({
 //   foo: {
 //     type: String,
@@ -81,7 +82,8 @@ const active = ref()
 const unitList = ref<UnitInterface[]>([])
 let allUnitList: UnitInterface[] = []
 const tab = ref('sequential')
-const cardInfo = ref<UnitMetricInterface[]>([])
+// eslint-disable-next-line
+const cardInfo: any = ref({})
 const isRight = ref(false)
 let unitInstance = ''
 const unitQuery = ref({
@@ -89,6 +91,7 @@ const unitQuery = ref({
   label: '主机',
   labelEn: 'host'
 })
+const isChange = ref('')
 const xAxis = ref<string[]>([])
 const unitOptions = [
   {
@@ -107,27 +110,27 @@ const unitOptions = [
     labelEn: 'firewall'
   },
   {
-    value: 'load_balance',
+    value: 'f5',
     label: 'F5负载均衡',
-    labelEn: 'load_balance'
+    labelEn: 'f5'
   },
   {
-    value: 'VPN',
+    value: 'vpn',
     label: 'VPN',
     labelEn: 'VPN'
   },
   {
-    value: 'Tomcat',
+    value: 'tomcat',
     label: 'Tomcat',
     labelEn: 'Tomcat'
   },
   {
-    value: 'Nginx',
+    value: 'nginx',
     label: 'Nginx',
     labelEn: 'Nginx'
   },
   {
-    value: 'MySQL',
+    value: 'mysql',
     label: 'MySQL',
     labelEn: 'MySQL'
   }
@@ -673,6 +676,7 @@ const flowOption = computed(() => ({
     }
   ]
 }))
+const infoArr = ref([])
 const columns = [
   {
     name: 'index',
@@ -1432,21 +1436,23 @@ const search = () => {
     unitList.value = allUnitList.filter(item => item.instance.indexOf(queryText.value) !== -1)
   }
 }
-const getWarnLine = async (instance: string) => {
-  const warningRes = await aiops.mail.getMetricWarning({ query: { instance } })
-  if (warningRes.data.results.length > 0) {
-    warningLineObj.value = warningRes.data.results[0]
-  } else {
-    warningLineObj.value.instance = instance
-    warningLineObj.value.cpu_rate = 0
-    warningLineObj.value.memory_used = 0
-    warningLineObj.value.disk_used = 0
-  }
+const getWarnLine = (instance: string) => {
+  aiops.mail.getMetricWarning({ query: { instance } }).then((warningRes) => {
+    if (warningRes.data.results.length > 0) {
+      warningLineObj.value = warningRes.data.results[0]
+    } else {
+      warningLineObj.value.instance = instance
+      warningLineObj.value.cpu_rate = 0
+      warningLineObj.value.memory_used = 0
+      warningLineObj.value.disk_used = 0
+    }
+  })
 }
 const getDetail = async (instance: string) => {
+  isChange.value = unitQuery.value.value
   active.value = instance
   unitInstance = instance
-  await getWarnLine(instance)
+  cardInfo.value = {}
   xAxis.value = []
   resourcesChartData.value.cpu.total = []
   resourcesChartData.value.cpu.user = []
@@ -1471,41 +1477,68 @@ const getDetail = async (instance: string) => {
   networkChartData.value.socket.inSegs = []
   networkChartData.value.socket.outSegs = []
   networkChartData.value.socket.retransSegs = []
-  const metricRes = await aiops.mail.getMailMetric({
+  const res = await aiops.mail.getMailMetricField({
+    query: {
+      instance
+    }
+  })
+  // eslint-disable-next-line
+  infoArr.value = res.data.results.filter((item: any) => item.desc !== '')
+  aiops.mail.getMailMetric({
     query: {
       timestamp__gte: Number(date.formatDate(startTime.value, 'X')),
       timestamp__lte: Number(date.formatDate(endTime.value, 'X')),
       instance
     }
+  }).then((metricRes) => {
+    const dataArr = Object.keys(metricRes.data.results)
+    if (dataArr.length > 0) {
+      // eslint-disable-next-line
+      infoArr.value.forEach((item: any) => {
+        item.value = metricRes.data.results[dataArr[dataArr.length - 1]][item.field]
+      })
+      cardInfo.value = metricRes.data.results[dataArr[dataArr.length - 1]]
+      console.log('11111', cardInfo.value)
+      dataArr.forEach((item) => {
+        xAxis.value.push(date.formatDate(Number(item) * 1000, 'HH:mm'))
+        resourcesChartData.value.cpu.total.push(Number(metricRes.data.results[item].cpu_rate).toFixed(2))
+        resourcesChartData.value.cpu.user.push(Number(metricRes.data.results[item].cpu_user_rate).toFixed(2))
+        resourcesChartData.value.cpu.disk.push(Number(metricRes.data.results[item].cpu_iowait_rate).toFixed(2))
+        resourcesChartData.value.cpu.sys.push(Number(metricRes.data.results[item].cpu_system_rate).toFixed(2))
+        resourcesChartData.value.mem.total.push((Number(metricRes.data.results[item].memory_total) / 1024 / 1024 / 1024).toFixed(2))
+        resourcesChartData.value.mem.use.push((Number(metricRes.data.results[item].memory_free) / 1024 / 1024 / 1024).toFixed(2))
+        performanceChartData.value.load.one.push(metricRes.data.results[item].node_load1)
+        performanceChartData.value.load.five.push(metricRes.data.results[item].node_load5)
+        performanceChartData.value.load.fifteen.push(metricRes.data.results[item].node_load15)
+        networkChartData.value.bandwidth.upload.push((Number(metricRes.data.results[item].network_transmit) / 1024 / 1024).toFixed(2))
+        networkChartData.value.bandwidth.download.push((Number(metricRes.data.results[item].network_receive) / 1024 / 1024).toFixed(2))
+        networkChartData.value.flow.upload.push((Number(metricRes.data.results[item].netflow_transmit) / 1024 / 1024).toFixed(2))
+        networkChartData.value.flow.download.push((Number(metricRes.data.results[item].netflow_receive) / 1024 / 1024).toFixed(2))
+        networkChartData.value.socket.currEstab.push(Number(metricRes.data.results[item].socket_CurrEstab).toFixed(2))
+        networkChartData.value.socket.tw.push(Number(metricRes.data.results[item].socket_TCP_tw).toFixed(2))
+        networkChartData.value.socket.used.push(Number(metricRes.data.results[item].socket_Sockets_used).toFixed(2))
+        networkChartData.value.socket.inuse.push(Number(metricRes.data.results[item].socket_UDP_inuse).toFixed(2))
+        networkChartData.value.socket.alloc.push(Number(metricRes.data.results[item].socket_TCP_alloc).toFixed(2))
+        networkChartData.value.socket.inSegs.push(Number(metricRes.data.results[item].socket_Tcp_InSegs).toFixed(2))
+        networkChartData.value.socket.outSegs.push(Number(metricRes.data.results[item].socket_Tcp_OutSegs).toFixed(2))
+        networkChartData.value.socket.retransSegs.push(Number(metricRes.data.results[item].socket_Tcp_RetransSegs).toFixed(2))
+        //     resourcesChartData.value.disk.total.unshift((Number(item.filesystem_avail) / 1024 / 1024 / 1024).toFixed(2))
+        //     resourcesChartData.value.disk.use.unshift((Number(item.filesystem_size) / 1024 / 1024 / 1024).toFixed(2))
+      })
+      isRight.value = true
+    }
   })
-  cardInfo.value = metricRes.data.results
-  metricRes.data.results.forEach((item: UnitMetricInterface) => {
-    xAxis.value.unshift(date.formatDate(item.timestamp * 1000, 'HH:mm'))
-    resourcesChartData.value.cpu.total.unshift(Number(item.cpu_rate).toFixed(2))
-    resourcesChartData.value.cpu.user.unshift(Number(item.cpu_user_rate).toFixed(2))
-    resourcesChartData.value.cpu.disk.unshift(Number(item.cpu_iowait_rate).toFixed(2))
-    resourcesChartData.value.cpu.sys.unshift(Number(item.cpu_system_rate).toFixed(2))
-    resourcesChartData.value.mem.total.unshift((Number(item.memory_total) / 1024 / 1024 / 1024).toFixed(2))
-    resourcesChartData.value.mem.use.unshift((Number(item.memory_used) / 1024 / 1024 / 1024).toFixed(2))
-    resourcesChartData.value.disk.total.unshift((Number(item.filesystem_avail) / 1024 / 1024 / 1024).toFixed(2))
-    resourcesChartData.value.disk.use.unshift((Number(item.filesystem_size) / 1024 / 1024 / 1024).toFixed(2))
-    performanceChartData.value.load.one.unshift(item.node_load1)
-    performanceChartData.value.load.five.unshift(item.node_load5)
-    performanceChartData.value.load.fifteen.unshift(item.node_load15)
-    networkChartData.value.bandwidth.upload.unshift((Number(item.network_transmit) / 1024 / 1024).toFixed(2))
-    networkChartData.value.bandwidth.download.unshift((Number(item.network_receive) / 1024 / 1024).toFixed(2))
-    networkChartData.value.flow.upload.unshift((Number(item.netflow_transmit) / 1024 / 1024).toFixed(2))
-    networkChartData.value.flow.download.unshift((Number(item.netflow_receive) / 1024 / 1024).toFixed(2))
-    networkChartData.value.socket.currEstab.unshift(Number(item.socket_CurrEstab).toFixed(2))
-    networkChartData.value.socket.tw.unshift(Number(item.socket_TCP_tw).toFixed(2))
-    networkChartData.value.socket.used.unshift(Number(item.socket_Sockets_used).toFixed(2))
-    networkChartData.value.socket.inuse.unshift(Number(item.socket_UDP_inuse).toFixed(2))
-    networkChartData.value.socket.alloc.unshift(Number(item.socket_TCP_alloc).toFixed(2))
-    networkChartData.value.socket.inSegs.unshift(Number(item.socket_Tcp_InSegs).toFixed(2))
-    networkChartData.value.socket.outSegs.unshift(Number(item.socket_Tcp_OutSegs).toFixed(2))
-    networkChartData.value.socket.retransSegs.unshift(Number(item.socket_Tcp_RetransSegs).toFixed(2))
-  })
-  isRight.value = true
+  // aiops.mail.getMailMetric({
+  //   query: {
+  //     timestamp__gte: Number(date.formatDate(startTime.value, 'X')),
+  //     timestamp__lte: Number(date.formatDate(endTime.value, 'X')),
+  //     instance,
+  //     field: 'filesystem'
+  //   }
+  // }).then((metricRes) => {
+  //   console.log(metricRes)
+  // })
+  // getWarnLine(instance)
 }
 const changeUnit = async (val: Record<string, string>) => {
   const res = await aiops.mail.getMailMachine({ query: { category: val.value, page: 1, page_size: 100 } })
@@ -1627,88 +1660,7 @@ onBeforeUnmount(() => {
         </q-scroll-area>
       </q-card>
       <div class="col-9 q-pl-sm" v-if="isRight">
-        <q-card flat bordered class="my-card row" :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2'">
-          <q-card-section class="col-4">
-            <div>
-              <span>操作系统：</span>
-              <span>{{ cardInfo[0].sys_name }}</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>系统内核：</span>
-              <span>{{ cardInfo[0].release }}</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>启动天数：</span>
-              <span>{{ cardInfo[0].boot_days }}天</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>健康值：</span>
-              <span>/</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>告警数：</span>
-              <span>/</span>
-            </div>
-          </q-card-section>
-          <q-card-section class="col">
-            <div>
-              <span>内存：</span>
-              <span>{{ (Number(cardInfo[0].memory_total) / 1024 / 1024 / 1024).toFixed(2) }}GB</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>CPU：</span>
-              <span>{{ cardInfo[0].cpu_core_count }}核</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>负载：</span>
-              <span>{{ cardInfo[0].node_load1 }}</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>CPU使用率：</span>
-              <span>{{ Number(cardInfo[0].cpu_rate).toFixed(2) }}%</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>内存使用率：</span>
-              <span>{{ (Number(cardInfo[0].memory_used) / Number(cardInfo[0].memory_total)).toFixed(2) }}%</span>
-            </div>
-          </q-card-section>
-          <q-card-section class="col">
-            <div>
-              <span>分区使用率：</span>
-              <span>{{ Number(cardInfo[0].filesystem_used_rate).toFixed(2) }}%</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>IOutil使用率：</span>
-              <span>/</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>磁盘读取：</span>
-              <span>{{ (Number(cardInfo[0].disk_read) / 1024 / 1024 / 1024).toFixed(2) }}GB/s</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>磁盘写入：</span>
-              <span>{{ (Number(cardInfo[0].disk_written) / 1024 / 1024 / 1024).toFixed(2) }}GB/s</span>
-            </div>
-          </q-card-section>
-          <q-card-section class="col">
-            <div>
-              <span>连接数：</span>
-              <span>{{ cardInfo[0].socket_CurrEstab }}</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>tcp_tw：</span>
-              <span>{{ cardInfo[0].socket_TCP_tw }}</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>下载带宽：</span>
-              <span>{{ (Number(cardInfo[0].network_receive) / 1024 / 1024).toFixed(2) }}Mb/s</span>
-            </div>
-            <div class="q-mt-xs">
-              <span>上传带宽：</span>
-              <span>{{ (Number(cardInfo[0].network_transmit) / 1024 / 1024).toFixed(2) }}MB/s</span>
-            </div>
-          </q-card-section>
-        </q-card>
+        <header-information :type="isChange" :data-info="cardInfo"/>
           <q-tabs
             v-model="tab"
             style="width: 300px"
@@ -1724,8 +1676,8 @@ onBeforeUnmount(() => {
             <q-tab name="warn" label="告警信息"/>
           </q-tabs>
           <q-separator/>
-          <q-tab-panels v-model="tab" animated>
-            <q-tab-panel name="sequential">
+          <q-tab-panels v-model="tab" animated class="q-mt-sm">
+            <q-tab-panel name="sequential" class="no-padding">
               <q-list bordered>
                 <q-expansion-item
                     switch-toggle-side
@@ -1786,7 +1738,7 @@ onBeforeUnmount(() => {
                   </q-expansion-item>
                 </q-list>
             </q-tab-panel>
-            <q-tab-panel name="log">
+            <q-tab-panel name="log" class="no-padding">
               <q-table
                 class="my-sticky-column-table"
                 flat
@@ -1829,7 +1781,7 @@ onBeforeUnmount(() => {
                 </template>
               </q-table>
             </q-tab-panel>
-            <q-tab-panel name="warn">
+            <q-tab-panel name="warn" class="no-padding">
               <q-table
                 class="my-sticky-column-table"
                 flat

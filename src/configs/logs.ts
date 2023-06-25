@@ -1,6 +1,22 @@
 // 更新日志内容，版本降序排列
 export const logs = [
   {
+    version: 'v0.1.3',
+    date: '2023-06-25',
+    time: '15:45:25',
+    release_author: 'duyukuan',
+    updates: [
+      {
+        info: '网站群模块全局页面完成基本设计以及布局',
+        commit_author: 'duyukuan'
+      },
+      {
+        info: '网站群模块可访问性页面筛选条件增加扩展项组件',
+        commit_author: 'duyukuan'
+      }
+    ]
+  },
+  {
     version: 'v0.1.2',
     date: '2023-06-14',
     time: '16:45:25',

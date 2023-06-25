@@ -239,72 +239,83 @@ const isLoad = ref(false)
         </div>
       </div>
     </div>
-    <div class="q-mt-lg">
-      <div class="row items-center">
-          <q-input filled dense v-model="date1">
-            <template v-slot:prepend>
-              <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                  <q-date v-model="date1" mask="YYYY-MM-DD HH:mm">
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
+    <div class="q-mt-md">
+      <q-list bordered>
+      <q-expansion-item
+        expand-separator
+        icon="las la-search-plus"
+        label="根据条件筛选"
+      >
+        <q-separator/>
+        <div class="q-pa-sm">
+          <div class="row items-center">
+            <q-input filled dense v-model="date1">
+              <template v-slot:prepend>
+                <q-icon name="event" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-date v-model="date1" mask="YYYY-MM-DD HH:mm">
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Close" color="primary" flat />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
 
-            <template v-slot:append>
-              <q-icon name="access_time" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                  <q-time v-model="date1" mask="YYYY-MM-DD HH:mm" format24h>
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-time>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
-          <div class="q-ml-md">一</div>
-          <q-input class="q-ml-md" filled dense v-model="date1">
-            <template v-slot:prepend>
-              <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                  <q-date v-model="date1" mask="YYYY-MM-DD HH:mm">
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
+              <template v-slot:append>
+                <q-icon name="access_time" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-time v-model="date1" mask="YYYY-MM-DD HH:mm" format24h>
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Close" color="primary" flat />
+                      </div>
+                    </q-time>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+            <div class="q-ml-md">一</div>
+            <q-input class="q-ml-md" filled dense v-model="date1">
+              <template v-slot:prepend>
+                <q-icon name="event" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-date v-model="date1" mask="YYYY-MM-DD HH:mm">
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Close" color="primary" flat />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
 
-            <template v-slot:append>
-              <q-icon name="access_time" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                  <q-time v-model="date1" mask="YYYY-MM-DD HH:mm" format24h>
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-time>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
-          <q-select class="q-ml-md col-3" outlined dense v-model="model" :options="options" label="请选择" />
+              <template v-slot:append>
+                <q-icon name="access_time" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-time v-model="date1" mask="YYYY-MM-DD HH:mm" format24h>
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Close" color="primary" flat />
+                      </div>
+                    </q-time>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+            <q-select class="q-ml-md col-3" outlined dense v-model="model" :options="options" label="请选择" />
+          </div>
+          <div class="q-mt-md">
+            <q-badge color="secondary">
+              根据时延范围筛选任务: {{ standard.min }}ms 到 {{ standard.max }}ms
+            </q-badge>
+            <q-range
+              v-model="standard"
+              :min="0"
+              :max="50"
+            />
+          </div>
         </div>
-      <div class="q-mt-md">
-        <q-badge color="secondary">
-          根据时延范围筛选任务: {{ standard.min }}ms 到 {{ standard.max }}ms
-        </q-badge>
-        <q-range
-          v-model="standard"
-          :min="0"
-          :max="50"
-        />
-      </div>
-      <div class="row items-center">
+      </q-expansion-item>
+      </q-list>
+      <div class="row items-center q-mt-sm">
         <div class="col-3">
           <q-input outlined dense v-model="text" label="请输入">
             <template v-slot:prepend>
