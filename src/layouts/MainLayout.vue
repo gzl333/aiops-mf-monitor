@@ -18,6 +18,7 @@ import { logs } from 'src/configs/logs'
 
 const store = useStore()
 void store.loadAllTables()
+console.log(store.tables)
 // const router = useRouter()
 // const route = useRoute()
 const tc = i18n.global.tc
@@ -47,6 +48,19 @@ const appVersion = logs[0].version
 
             <q-item
               clickable
+              :active="activeItem === 'cstn'"
+              @click="navigateToUrl(appPath + '/cstn')"
+              active-class="active-item"
+            >
+              <q-item-section class="column items-center">
+                <img src="../../src/assets/cst_blue.png" alt="" v-if="activeItem === 'cstn'">
+                <img src="../../src/assets/cst.png" alt="" v-else>
+                <div class="active-text text-center">{{ tc('中国科技网') }}</div>
+              </q-item-section>
+            </q-item>
+
+            <q-item
+              clickable
               :active="activeItem === 'meeting'"
               @click="navigateToUrl(appPath + '/meeting')"
               active-class="active-item"
@@ -66,6 +80,42 @@ const appVersion = logs[0].version
               <q-item-section class="column items-center">
                 <q-icon name="las la-poll-h" size="lg"/>
                 <div class="active-text text-center">{{ tc('网站群') }}</div>
+              </q-item-section>
+            </q-item>
+
+            <q-item
+              clickable
+              :active="activeItem === 'server'"
+              @click="activeItem = 'server'; navigateToUrl(appPath + '/server')"
+              active-class="active-item"
+            >
+              <q-item-section class="column items-center">
+                <q-icon name="las la-server" size="lg"/>
+                <div class="active-text text-center">{{ tc('服务器') }}</div>
+              </q-item-section>
+            </q-item>
+
+            <q-item
+              clickable
+              :active="activeItem === 'ceph'"
+              @click="activeItem = 'ceph'; navigateToUrl(appPath + '/ceph')"
+              active-class="active-item"
+            >
+              <q-item-section class="column items-center">
+                <q-icon name="las la-digital-tachograph" size="lg"/>
+                <div class="active-text text-center">Ceph</div>
+              </q-item-section>
+            </q-item>
+
+            <q-item
+              clickable
+              :active="activeItem === 'tidb'"
+              @click="activeItem = 'tidb'; navigateToUrl(appPath + '/tidb')"
+              active-class="active-item"
+            >
+              <q-item-section class="column items-center">
+                <q-icon name="las la-database" size="lg"/>
+                <div class="active-text text-center">TiDB</div>
               </q-item-section>
             </q-item>
 

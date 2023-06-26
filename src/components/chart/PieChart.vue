@@ -18,6 +18,10 @@ const props = defineProps({
   option: {
     type: Object,
     required: true
+  },
+  height: {
+    type: String,
+    required: true
   }
 })
 const container = ref<HTMLElement>()
@@ -41,7 +45,7 @@ onMounted(() => {
 
 <template>
   <div class="LineChart" style="width: 100%">
-    <div ref="container" :style="{ height: '220px' }"></div>
+    <div ref="container" :style="{ width: '100%', height: props?.height + 'px'  }"></div>
   </div>
 </template>
 

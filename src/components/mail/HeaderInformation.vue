@@ -12,7 +12,6 @@ const props = defineProps({
     required: true
   }
 })
-console.log(props)
 </script>
 
 <template>
@@ -116,7 +115,7 @@ console.log(props)
       <q-card-section class="col-12">
         <div>
           <span>cpu使用率：</span>
-          <span>{{ props.dataInfo?.cpu_rate }}%</span>
+          <span>{{ props.dataInfo.cpu_rate ? props.dataInfo.cpu_rate + '%' : '/' }}</span>
         </div>
         <div class="q-mt-md row">
           <div>交换机入包数：</div>
@@ -152,7 +151,7 @@ console.log(props)
       <q-card-section class="col-4">
         <div>
           <span>cpu使用率：</span>
-          <span>{{ props.dataInfo?.cpu_rate }}%</span>
+          <span>{{ props.dataInfo.cpu_rate ? props.dataInfo.cpu_rate + '%' : '/' }}</span>
         </div>
       </q-card-section>
     </q-card>
@@ -164,75 +163,71 @@ console.log(props)
         </div>
         <div class="q-mt-xs">
           <span>客户端接收的字节数 （入站流量）：</span>
-          <span>/</span>
+          <span>{{ Number(props.dataInfo.sysStatClientBytesIn).toFixed(2) }}</span>
         </div>
         <div class="q-mt-xs">
           <span>客户端发送的字节数 （出站流量）：</span>
-          <span>/</span>
+          <span>{{ Number(props.dataInfo.sysStatClientBytesOut).toFixed(2) }}</span>
         </div>
         <div class="q-mt-xs">
           <span>服务器接收的字节数 （入站流量）：</span>
-          <span>{{ 1 }}天</span>
+          <span>{{ Number(props.dataInfo.sysStatServerBytesIn).toFixed(2) }}</span>
         </div>
         <div class="q-mt-xs">
           <span>服务器发送的字节数 （出站流量）：</span>
-          <span>/</span>
+          <span>{{ Number(props.dataInfo.sysStatServerBytesOut).toFixed(2) }}</span>
         </div>
         <div class="q-mt-xs">
           <span>F5设备上所有TCP连接的总数：</span>
-          <span>{{ 1 }}</span>
-        </div>
-        <div class="q-mt-xs">
-          <span>F5设备上所有TCP连接的总数：</span>
-          <span>{{ 1 }}</span>
+          <span>{{ Number(props.dataInfo.sysTcpStatConnects).toFixed(2) }}</span>
         </div>
       </q-card-section>
       <q-card-section class="col-4">
         <div class="q-mt-xs">
           <span>负载均衡_内存使用（TMM）：</span>
-          <span>{{ 1 }}天</span>
+          <span>{{ (Number(props.dataInfo.memory_tmm) / 1024 / 1024 / 1024).toFixed(2) }}GB</span>
         </div>
         <div class="q-mt-xs">
           <span>当前正在进行的SSL会话数量：</span>
-          <span>{{ 1 }}</span>
+          <span>{{ Number(props.dataInfo.sysClientsslStatCurConns).toFixed(2) }}</span>
         </div>
         <div class="q-mt-xs">
           <span>F5设备上当前所有客户端连接的连接数：</span>
-          <span>{{ 1 }}天</span>
+          <span>{{ Number(props.dataInfo.sysStatClientCurConns).toFixed(2) }}</span>
         </div>
         <div class="q-mt-xs">
           <span>F5设备上所有客户端连接的总数：</span>
-          <span>{{ 1 }}天</span>
+          <span>{{ Number(props.dataInfo.sysStatClientTotConns).toFixed(2) }}</span>
         </div>
         <div class="q-mt-xs">
           <span>F5设备上当前所有服务器SSL会话的连接数：</span>
-          <span>/</span>
+          <span>{{ Number(props.dataInfo.sysServersslStatCurConns).toFixed(2) }}</span>
         </div>
       </q-card-section>
       <q-card-section class="col-4">
         <div class="q-mt-xs">
           <span>负载均衡_内存使用（主机）：</span>
-          <span>/</span>
+          <span>{{ (Number(props.dataInfo.memory_host) / 1024 / 1024 / 1024).toFixed(2) }}GB</span>
         </div>
         <div class="q-mt-xs">
           <span>设备启动以来所有建立的SSL会话的数量：</span>
-          <span>{{ 1 }}</span>
+          <span>{{ Number(props.dataInfo.sysClientsslStatTotNativeConns).toFixed(2) }}</span>
         </div>
         <div class="q-mt-xs">
           <span>F5设备上所有PVA客户端连接的总数（单点登录）：</span>
-          <span>{{ 1 }}</span>
+          <span>{{ Number(props.dataInfo.sysStatPvaClientTotConns).toFixed(2) }}</span>
         </div>
         <div class="q-mt-xs">
           <span>F5设备上所有PVA服务器连接的总数 ：</span>
-          <span>{{ 1 }}</span>
+          <span>{{ Number(props.dataInfo.sysStatPvaServerTotConns).toFixed(2) }}</span>
         </div>
         <div>
           <span>F5设备上当前所有服务器连接的连接数：</span>
-          <span>{{ 1 }}</span>
+          <span>{{ Number(props.dataInfo.sysStatServerCurConns).toFixed(2) }}</span>
         </div>
         <div class="q-mt-xs">
           <span>F5设备上所有服务器连接的总数：</span>
-          <span>{{ 1 }}</span>
+          <span>{{ Number(props.dataInfo.sysStatServerTotConns).toFixed(2) }}</span>
         </div>
       </q-card-section>
     </q-card>
@@ -240,23 +235,23 @@ console.log(props)
       <q-card-section class="col-4">
         <div>
           <span>cpu使用率：</span>
-          <!--          <span>{{ cardInfo ? cardInfo.sysname : '/' }}</span>-->
+          <span>{{ props.dataInfo.cpu_rate ? props.dataInfo.cpu_rate + '%' : '/'}}</span>
         </div>
         <div class="q-mt-xs">
           <span>入包数：</span>
-          <!--          <span>{{ cardInfo ? cardInfo.release : '/' }}</span>-->
+          <span>{{ props.dataInfo.packet_in ? props.dataInfo.packet_in + 'Bytes/s' : '/' }}</span>
         </div>
         <div class="q-mt-xs">
           <span>出包数：</span>
-          <!--          <span>{{ cardInfo ? cardInfo.boot_seconds : '/' }}天</span>-->
+          <span>{{ props.dataInfo.packet_out ? props.dataInfo.packet_out + 'Bytes/s' : '/' }}</span>
         </div>
         <div class="q-mt-xs">
           <span>入流量：</span>
-          <span>/</span>
+          <span>{{ props.dataInfo.flow_in ? props.dataInfo.flow_in + 'Bytes/s' : '/' }}</span>
         </div>
         <div class="q-mt-xs">
           <span>出流量：</span>
-          <span>/</span>
+          <span>{{ props.dataInfo.flow_out ? props.dataInfo.flow_out + 'Bytes/s' : '/' }}</span>
         </div>
       </q-card-section>
     </q-card>

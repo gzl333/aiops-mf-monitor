@@ -161,7 +161,7 @@ const isLoad = ref(false)
       <div class="col-5">
         <div class="row items-center">
           <div class="col">
-            <pie-chart :option="overviewOption"/>
+            <pie-chart height="220" :option="overviewOption"/>
           </div>
           <div class="col text-center">
             <div class="text-h6">当前任务总览</div>

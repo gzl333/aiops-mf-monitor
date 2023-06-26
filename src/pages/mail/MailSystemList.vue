@@ -68,6 +68,13 @@ interface WarningLineInterface {
   memory_used: number
   disk_used: number
 }
+interface LogInterface {
+  instance: string
+  log_name: string
+  log_source: string
+  text: string
+  timestamp: number
+}
 const store = useStore()
 // const route = useRoute()
 // const router = useRouter()
@@ -85,6 +92,7 @@ const tab = ref('sequential')
 // eslint-disable-next-line
 const cardInfo: any = ref({})
 const isRight = ref(false)
+const isShow = ref(false)
 let unitInstance = ''
 const unitQuery = ref({
   value: 'host',
@@ -240,9 +248,7 @@ const cpuOption = computed(() => ({
     data: xAxis.value
   },
   yAxis: {
-    type: 'value',
-    max: 100,
-    min: 0
+    type: 'value'
   },
   series: [
     {
@@ -341,9 +347,7 @@ const memOption = computed(() => ({
     data: xAxis.value
   },
   yAxis: {
-    type: 'value',
-    max: 1000,
-    min: 0
+    type: 'value'
   },
   series: [
     {
@@ -429,9 +433,7 @@ const diskOption = computed(() => ({
     data: xAxis.value
   },
   yAxis: {
-    type: 'value',
-    max: 2000,
-    min: 0
+    type: 'value'
   },
   series: [
     {
@@ -535,9 +537,7 @@ const bandwidthOption = computed(() => ({
     data: xAxis.value
   },
   yAxis: {
-    type: 'value',
-    max: 300,
-    min: 0
+    type: 'value'
   },
   series: [
     {
@@ -676,665 +676,24 @@ const flowOption = computed(() => ({
     }
   ]
 }))
-const infoArr = ref([])
-const columns = [
-  {
-    name: 'index',
-    label: '序号',
-    required: true,
-    align: 'left',
-    field: 'index'
-  },
+const logColumns = [
   {
     name: 'time',
     required: true,
-    label: '时间戳',
-    align: 'left',
+    label: '时间',
+    align: 'center',
     field: row => row.time,
-    format: val => `${val}`,
-    sortable: true
+    format: val => `${val}`
   },
-  { name: 'logType', align: 'left', label: '日志类型', field: 'logType', sortable: true },
+  { name: 'source', align: 'center', label: '日志源', field: 'logType' },
   {
     name: 'info',
-    align: 'left',
+    align: 'center',
     label: '日志信息',
-    field: 'info',
-    sortable: false
+    field: 'info'
   }
 ]
-const rows = ref([
-  {
-    time: '2023-04-10 09:30:42',
-    logType: 'access',
-    info: {
-      '@timestamp': [
-        '2023-03-10T01:30:42.293Z'
-      ],
-      '@version': [
-        '1'
-      ],
-      '@version.keyword': [
-        '1'
-      ],
-      'agent.ephemeral_id': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.ephemeral_id.keyword': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.hostname': [
-        'MySQLSalve'
-      ],
-      'agent.hostname.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.id': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.id.keyword': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.name': [
-        'MySQLSalve'
-      ],
-      'agent.name.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.type': [
-        'filebeat'
-      ],
-      'agent.type.keyword': [
-        'filebeat'
-      ],
-      'agent.version': [
-        '7.9.3'
-      ],
-      'agent.version.keyword': [
-        '7.9.3'
-      ],
-      'ecs.version': [
-        '1.5.0'
-      ],
-      'ecs.version.keyword': [
-        '1.5.0'
-      ],
-      'fields.log_source': [
-        'MySQLSalve.err'
-      ],
-      'fields.log_source.keyword': [
-        'MySQLSalve.err'
-      ],
-      'host.name': [
-        'MySQLSalve'
-      ],
-      'host.name.keyword': [
-        'MySQLSalve'
-      ],
-      'input.type': [
-        'log'
-      ],
-      'input.type.keyword': [
-        'log'
-      ],
-      'log.file.path': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.file.path.keyword': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.offset': [
-        19763193
-      ],
-      message: [
-        '2023-03-10T01:30:36.068865Z 539948 [Note] Got an error reading communication packets'
-      ],
-      _id: 'LqkkyYYBFZpIWJgLWx7O',
-      _index: 'mail_mysqlsalve.err.log-2023.03',
-      _score: null
-    }
-  },
-  {
-    time: '2023-04-10 09:30:42',
-    logType: 'error',
-    info: {
-      '@timestamp': [
-        '2023-03-10T01:30:42.293Z'
-      ],
-      '@version': [
-        '1'
-      ],
-      '@version.keyword': [
-        '1'
-      ],
-      'agent.ephemeral_id': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.ephemeral_id.keyword': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.hostname': [
-        'MySQLSalve'
-      ],
-      'agent.hostname.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.id': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.id.keyword': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.name': [
-        'MySQLSalve'
-      ],
-      'agent.name.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.type': [
-        'filebeat'
-      ],
-      'agent.type.keyword': [
-        'filebeat'
-      ],
-      'agent.version': [
-        '7.9.3'
-      ],
-      'agent.version.keyword': [
-        '7.9.3'
-      ],
-      'ecs.version': [
-        '1.5.0'
-      ],
-      'ecs.version.keyword': [
-        '1.5.0'
-      ],
-      'fields.log_source': [
-        'MySQLSalve.err'
-      ],
-      'fields.log_source.keyword': [
-        'MySQLSalve.err'
-      ],
-      'host.name': [
-        'MySQLSalve'
-      ],
-      'host.name.keyword': [
-        'MySQLSalve'
-      ],
-      'input.type': [
-        'log'
-      ],
-      'input.type.keyword': [
-        'log'
-      ],
-      'log.file.path': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.file.path.keyword': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.offset': [
-        19763193
-      ],
-      message: [
-        '2023-03-10T01:30:36.068865Z 539948 [Note] Got an error reading communication packets'
-      ],
-      _id: 'LqkkyYYBFZpIWJgLWx7O',
-      _index: 'mail_mysqlsalve.err.log-2023.03',
-      _score: null
-    }
-  },
-  {
-    time: '2023-04-10 09:30:42',
-    logType: 'access',
-    info: {
-      '@timestamp': [
-        '2023-03-10T01:30:42.293Z'
-      ],
-      '@version': [
-        '1'
-      ],
-      '@version.keyword': [
-        '1'
-      ],
-      'agent.ephemeral_id': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.ephemeral_id.keyword': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.hostname': [
-        'MySQLSalve'
-      ],
-      'agent.hostname.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.id': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.id.keyword': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.name': [
-        'MySQLSalve'
-      ],
-      'agent.name.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.type': [
-        'filebeat'
-      ],
-      'agent.type.keyword': [
-        'filebeat'
-      ],
-      'agent.version': [
-        '7.9.3'
-      ],
-      'agent.version.keyword': [
-        '7.9.3'
-      ],
-      'ecs.version': [
-        '1.5.0'
-      ],
-      'ecs.version.keyword': [
-        '1.5.0'
-      ],
-      'fields.log_source': [
-        'MySQLSalve.err'
-      ],
-      'fields.log_source.keyword': [
-        'MySQLSalve.err'
-      ],
-      'host.name': [
-        'MySQLSalve'
-      ],
-      'host.name.keyword': [
-        'MySQLSalve'
-      ],
-      'input.type': [
-        'log'
-      ],
-      'input.type.keyword': [
-        'log'
-      ],
-      'log.file.path': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.file.path.keyword': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.offset': [
-        19763193
-      ],
-      message: [
-        '  "192.168.240.10 - - [27/Mar/2023:23:56:49 +0800]  GET /images/@kibana-highlighted-field@err@/kibana-highlighted-field@.png HTTP/1.1  404 393  -   Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_0) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11 108.93.87.83, 124.70.89.241 0.000 0.001"'
-      ],
-      _id: 'LqkkyYYBFZpIWJgLWx7O',
-      _index: 'mail_mysqlsalve.err.log-2023.03',
-      _score: null
-    }
-  },
-  {
-    time: '2023-04-10 09:30:42',
-    logType: 'error',
-    info: {
-      '@timestamp': [
-        '2023-03-10T01:30:42.293Z'
-      ],
-      '@version': [
-        '1'
-      ],
-      '@version.keyword': [
-        '1'
-      ],
-      'agent.ephemeral_id': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.ephemeral_id.keyword': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.hostname': [
-        'MySQLSalve'
-      ],
-      'agent.hostname.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.id': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.id.keyword': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.name': [
-        'MySQLSalve'
-      ],
-      'agent.name.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.type': [
-        'filebeat'
-      ],
-      'agent.type.keyword': [
-        'filebeat'
-      ],
-      'agent.version': [
-        '7.9.3'
-      ],
-      'agent.version.keyword': [
-        '7.9.3'
-      ],
-      'ecs.version': [
-        '1.5.0'
-      ],
-      'ecs.version.keyword': [
-        '1.5.0'
-      ],
-      'fields.log_source': [
-        'MySQLSalve.err'
-      ],
-      'fields.log_source.keyword': [
-        'MySQLSalve.err'
-      ],
-      'host.name': [
-        'MySQLSalve'
-      ],
-      'host.name.keyword': [
-        'MySQLSalve'
-      ],
-      'input.type': [
-        'log'
-      ],
-      'input.type.keyword': [
-        'log'
-      ],
-      'log.file.path': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.file.path.keyword': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.offset': [
-        19763193
-      ],
-      message: [
-        '2023-03-10T01:30:36.068865Z 539948 [Note] Got an error reading communication packets'
-      ],
-      _id: 'LqkkyYYBFZpIWJgLWx7O',
-      _index: 'mail_mysqlsalve.err.log-2023.03',
-      _score: null
-    }
-  },
-  {
-    time: '2023-04-10 09:30:42',
-    logType: 'access',
-    info: {
-      '@timestamp': [
-        '2023-03-10T01:30:42.293Z'
-      ],
-      '@version': [
-        '1'
-      ],
-      '@version.keyword': [
-        '1'
-      ],
-      'agent.ephemeral_id': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.ephemeral_id.keyword': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.hostname': [
-        'MySQLSalve'
-      ],
-      'agent.hostname.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.id': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.id.keyword': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.name': [
-        'MySQLSalve'
-      ],
-      'agent.name.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.type': [
-        'filebeat'
-      ],
-      'agent.type.keyword': [
-        'filebeat'
-      ],
-      'agent.version': [
-        '7.9.3'
-      ],
-      'agent.version.keyword': [
-        '7.9.3'
-      ],
-      'ecs.version': [
-        '1.5.0'
-      ],
-      'ecs.version.keyword': [
-        '1.5.0'
-      ],
-      'fields.log_source': [
-        'MySQLSalve.err'
-      ],
-      'fields.log_source.keyword': [
-        'MySQLSalve.err'
-      ],
-      'host.name': [
-        'MySQLSalve'
-      ],
-      'host.name.keyword': [
-        'MySQLSalve'
-      ],
-      'input.type': [
-        'log'
-      ],
-      'input.type.keyword': [
-        'log'
-      ],
-      'log.file.path': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.file.path.keyword': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.offset': [
-        19763193
-      ],
-      message: [
-        '2023-03-10T01:30:36.068865Z 539948 [Note] Got an error reading communication packets'
-      ],
-      _id: 'LqkkyYYBFZpIWJgLWx7O',
-      _index: 'mail_mysqlsalve.err.log-2023.03',
-      _score: null
-    }
-  },
-  {
-    time: '2023-04-10 09:30:42',
-    logType: 'access',
-    info: {
-      '@timestamp': [
-        '2023-03-10T01:30:42.293Z'
-      ],
-      '@version': [
-        '1'
-      ],
-      '@version.keyword': [
-        '1'
-      ],
-      'agent.ephemeral_id': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.ephemeral_id.keyword': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.hostname': [
-        'MySQLSalve'
-      ],
-      'agent.hostname.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.id': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.id.keyword': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.name': [
-        'MySQLSalve'
-      ],
-      'agent.name.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.type': [
-        'filebeat'
-      ],
-      'agent.type.keyword': [
-        'filebeat'
-      ],
-      'agent.version': [
-        '7.9.3'
-      ],
-      'agent.version.keyword': [
-        '7.9.3'
-      ],
-      'ecs.version': [
-        '1.5.0'
-      ],
-      'ecs.version.keyword': [
-        '1.5.0'
-      ],
-      'fields.log_source': [
-        'MySQLSalve.err'
-      ],
-      'fields.log_source.keyword': [
-        'MySQLSalve.err'
-      ],
-      'host.name': [
-        'MySQLSalve'
-      ],
-      'host.name.keyword': [
-        'MySQLSalve'
-      ],
-      'input.type': [
-        'log'
-      ],
-      'input.type.keyword': [
-        'log'
-      ],
-      'log.file.path': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.file.path.keyword': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.offset': [
-        19763193
-      ],
-      message: [
-        '2023-03-10T01:30:36.068865Z 539948 [Note] Got an error reading communication packets'
-      ],
-      _id: 'LqkkyYYBFZpIWJgLWx7O',
-      _index: 'mail_mysqlsalve.err.log-2023.03',
-      _score: null
-    }
-  },
-  {
-    time: '2023-04-10 09:30:42',
-    logType: 'access',
-    info: {
-      '@timestamp': [
-        '2023-03-10T01:30:42.293Z'
-      ],
-      '@version': [
-        '1'
-      ],
-      '@version.keyword': [
-        '1'
-      ],
-      'agent.ephemeral_id': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.ephemeral_id.keyword': [
-        '2bda741f-24f3-4206-bbdb-37dd8f6ec1f8'
-      ],
-      'agent.hostname': [
-        'MySQLSalve'
-      ],
-      'agent.hostname.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.id': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.id.keyword': [
-        'bbc21242-aff0-4d39-a243-a4df2839f64c'
-      ],
-      'agent.name': [
-        'MySQLSalve'
-      ],
-      'agent.name.keyword': [
-        'MySQLSalve'
-      ],
-      'agent.type': [
-        'filebeat'
-      ],
-      'agent.type.keyword': [
-        'filebeat'
-      ],
-      'agent.version': [
-        '7.9.3'
-      ],
-      'agent.version.keyword': [
-        '7.9.3'
-      ],
-      'ecs.version': [
-        '1.5.0'
-      ],
-      'ecs.version.keyword': [
-        '1.5.0'
-      ],
-      'fields.log_source': [
-        'MySQLSalve.err'
-      ],
-      'fields.log_source.keyword': [
-        'MySQLSalve.err'
-      ],
-      'host.name': [
-        'MySQLSalve'
-      ],
-      'host.name.keyword': [
-        'MySQLSalve'
-      ],
-      'input.type': [
-        'log'
-      ],
-      'input.type.keyword': [
-        'log'
-      ],
-      'log.file.path': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.file.path.keyword': [
-        '/home/coremail/var/mysql/MySQLSalve.err'
-      ],
-      'log.offset': [
-        19763193
-      ],
-      message: [
-        '2023-03-10T01:30:36.068865Z 539948 [Note] Got an error reading communication packets'
-      ],
-      _id: 'LqkkyYYBFZpIWJgLWx7O',
-      _index: 'mail_mysqlsalve.err.log-2023.03',
-      _score: null
-    }
-  }
-])
+const logRows = ref<LogInterface[]>([])
 const columns1 = [
   {
     name: 'index',
@@ -1438,13 +797,15 @@ const search = () => {
 }
 const getWarnLine = (instance: string) => {
   aiops.mail.getMetricWarning({ query: { instance } }).then((warningRes) => {
-    if (warningRes.data.results.length > 0) {
-      warningLineObj.value = warningRes.data.results[0]
-    } else {
-      warningLineObj.value.instance = instance
-      warningLineObj.value.cpu_rate = 0
-      warningLineObj.value.memory_used = 0
-      warningLineObj.value.disk_used = 0
+    if (Object.keys(warningRes.data).length > 0) {
+      if (warningRes.data.results.length > 0) {
+        warningLineObj.value = warningRes.data.results[0]
+      } else {
+        warningLineObj.value.instance = instance
+        warningLineObj.value.cpu_rate = 0
+        warningLineObj.value.memory_used = 0
+        warningLineObj.value.disk_used = 0
+      }
     }
   })
 }
@@ -1477,29 +838,26 @@ const getDetail = async (instance: string) => {
   networkChartData.value.socket.inSegs = []
   networkChartData.value.socket.outSegs = []
   networkChartData.value.socket.retransSegs = []
-  const res = await aiops.mail.getMailMetricField({
-    query: {
-      instance
-    }
-  })
-  // eslint-disable-next-line
-  infoArr.value = res.data.results.filter((item: any) => item.desc !== '')
-  aiops.mail.getMailMetric({
+  // const fieldRes = await aiops.mail.getMailMetricField({
+  //   query: {
+  //     instance
+  //   }
+  // })
+  const metricRes = await aiops.mail.getMailMetric({
     query: {
       timestamp__gte: Number(date.formatDate(startTime.value, 'X')),
       timestamp__lte: Number(date.formatDate(endTime.value, 'X')),
       instance
     }
-  }).then((metricRes) => {
-    const dataArr = Object.keys(metricRes.data.results)
-    if (dataArr.length > 0) {
-      // eslint-disable-next-line
-      infoArr.value.forEach((item: any) => {
-        item.value = metricRes.data.results[dataArr[dataArr.length - 1]][item.field]
-      })
-      cardInfo.value = metricRes.data.results[dataArr[dataArr.length - 1]]
-      console.log('11111', cardInfo.value)
+  })
+  const dataArr = Object.keys(metricRes.data.results)
+  if (dataArr.length > 0) {
+    cardInfo.value = metricRes.data.results[dataArr[dataArr.length - 1]]
+    if (unitQuery.value.value === 'host' || unitQuery.value.value === 'tomcat' || unitQuery.value.value === 'nginx' || unitQuery.value.value === 'mysql') {
+      isShow.value = true
       dataArr.forEach((item) => {
+        let totalSize = 0
+        let availSize = 0
         xAxis.value.push(date.formatDate(Number(item) * 1000, 'HH:mm'))
         resourcesChartData.value.cpu.total.push(Number(metricRes.data.results[item].cpu_rate).toFixed(2))
         resourcesChartData.value.cpu.user.push(Number(metricRes.data.results[item].cpu_user_rate).toFixed(2))
@@ -1522,23 +880,25 @@ const getDetail = async (instance: string) => {
         networkChartData.value.socket.inSegs.push(Number(metricRes.data.results[item].socket_Tcp_InSegs).toFixed(2))
         networkChartData.value.socket.outSegs.push(Number(metricRes.data.results[item].socket_Tcp_OutSegs).toFixed(2))
         networkChartData.value.socket.retransSegs.push(Number(metricRes.data.results[item].socket_Tcp_RetransSegs).toFixed(2))
-        //     resourcesChartData.value.disk.total.unshift((Number(item.filesystem_avail) / 1024 / 1024 / 1024).toFixed(2))
-        //     resourcesChartData.value.disk.use.unshift((Number(item.filesystem_size) / 1024 / 1024 / 1024).toFixed(2))
+        metricRes.data.results[item].filesystem_size.forEach((size) => {
+          totalSize += Number(size.filesystem_size)
+        })
+        metricRes.data.results[item].filesystem_avail.forEach((size) => {
+          availSize += Number(size.filesystem_avail)
+        })
+        resourcesChartData.value.disk.use.push((availSize / 1024 / 1024 / 1024).toFixed(2))
+        resourcesChartData.value.disk.total.push((totalSize / 1024 / 1024 / 1024).toFixed(2))
       })
-      isRight.value = true
+    } else {
+      isShow.value = false
+      dataArr.forEach((item) => {
+        xAxis.value.push(date.formatDate(Number(item) * 1000, 'HH:mm'))
+        resourcesChartData.value.cpu.total.push(Number(metricRes.data.results[item].cpu_rate).toFixed(2))
+      })
     }
-  })
-  // aiops.mail.getMailMetric({
-  //   query: {
-  //     timestamp__gte: Number(date.formatDate(startTime.value, 'X')),
-  //     timestamp__lte: Number(date.formatDate(endTime.value, 'X')),
-  //     instance,
-  //     field: 'filesystem'
-  //   }
-  // }).then((metricRes) => {
-  //   console.log(metricRes)
-  // })
-  // getWarnLine(instance)
+    isRight.value = true
+  }
+  getWarnLine(instance)
 }
 const changeUnit = async (val: Record<string, string>) => {
   const res = await aiops.mail.getMailMachine({ query: { category: val.value, page: 1, page_size: 100 } })
@@ -1548,6 +908,22 @@ const changeUnit = async (val: Record<string, string>) => {
 changeUnit(unitQuery.value)
 const changeTime = () => {
   getDetail(unitInstance)
+}
+const currentPage = ref(1)
+const logCount = ref(0)
+const logTab = async () => {
+  const logRes = await aiops.mail.getMailLog({
+    query: {
+      instance: unitInstance,
+      page: currentPage.value,
+      page_size: 5
+    }
+  })
+  logRows.value = logRes.data.results
+  logCount.value = logRes.data.count
+}
+const chagePagination = () => {
+  logTab()
 }
 $bus.on('warn', async (value: boolean) => {
   if (value) {
@@ -1672,7 +1048,7 @@ onBeforeUnmount(() => {
             narrow-indicator
           >
             <q-tab name="sequential" label="时序信息"/>
-            <q-tab name="log" label="日志信息"/>
+            <q-tab name="log" label="日志信息" @click="logTab"/>
             <q-tab name="warn" label="告警信息"/>
           </q-tabs>
           <q-separator/>
@@ -1691,16 +1067,17 @@ onBeforeUnmount(() => {
                         <div class="col-6">
                           <line-chart :option="cpuOption"/>
                         </div>
-                        <div class="col-6">
+                        <div class="col-6" v-if="isShow">
                           <line-chart :option="memOption"/>
                         </div>
-                        <div class="col-6 q-mt-lg">
+                        <div class="col-6 q-mt-lg" v-if="isShow">
                           <line-chart :option="diskOption"/>
                         </div>
                       </q-card-section>
                     </q-card>
                   </q-expansion-item>
                 <q-expansion-item
+                    v-if="isShow"
                     switch-toggle-side
                     expand-separator
                     default-opened
@@ -1716,6 +1093,7 @@ onBeforeUnmount(() => {
                     </q-card>
                   </q-expansion-item>
                 <q-expansion-item
+                    v-if="isShow"
                     switch-toggle-side
                     expand-separator
                     default-opened
@@ -1740,48 +1118,58 @@ onBeforeUnmount(() => {
             </q-tab-panel>
             <q-tab-panel name="log" class="no-padding">
               <q-table
-                class="my-sticky-column-table"
+                class="my-sticky-column-table q-pb-sm"
                 flat
                 bordered
-                :rows="rows"
+                :rows="logRows"
                 :table-header-style="{ backgroundColor: 'rgb(239, 240, 244)' }"
-                :columns="columns"
-                row-key="name"
+                :columns="logColumns"
+                hide-pagination
+                no-data-label="暂无日志信息"
               >
                 <template v-slot:body="props">
                   <q-tr :props="props">
-                    <q-td key="index" auto-width>
-                      {{ props.row.index }}
-                    </q-td>
                     <q-td key="time" auto-width>
-                      {{ props.row.time }}
+                      {{ date.formatDate(props.row.timestamp / 1000000, 'YYYY-MM-DD HH:mm') }}
                     </q-td>
-                    <q-td key="type" auto-width>
-                      <q-chip v-show="props.row.logType === 'error'" square dense color="aiops-negative" text-color="white" :label="props.row.logType" />
-                      <q-chip v-show="props.row.logType !== 'error'" square dense :label="props.row.logType" />
+                    <q-td key="source" auto-width>
+<!--                      <q-chip v-show="props.row.logType === 'error'" square dense color="aiops-negative" text-color="white" :label="props.row.logType" />-->
+<!--                      <q-chip v-show="props.row.logType !== 'error'" square dense :label="props.row.logType" />-->
+                      {{ props.row.log_source }}
                     </q-td>
                     <q-td key="info" style="max-width: 500px; white-space: pre-wrap;">
-                      <div class="row wrap">
-                        <div
-                          v-for="(value, key, index) in props.row.info"
-                          :key="index"
-                          :class="[
-                  {'col-6': key !== 'message'},
-                  {'ellipsis': key !== 'message'},
-                  {'bg-aiops-hover-primary': key === 'message'},
-                  {'col-12': key === 'message'},
-                  'q-pr-sm'
-                ]"
-                        >
-                          {{ key }}: {{ value }}
-                        </div>
-                      </div>
+                      {{ props.row.text }}
                     </q-td>
+<!--                    <q-td key="info" style="max-width: 500px; white-space: pre-wrap;">-->
+<!--                      <div class="row wrap">-->
+<!--                        <div-->
+<!--                          v-for="(value, key, index) in props.row.info"-->
+<!--                          :key="index"-->
+<!--                          :class="[-->
+<!--                  {'col-6': key !== 'message'},-->
+<!--                  {'ellipsis': key !== 'message'},-->
+<!--                  {'bg-aiops-hover-primary': key === 'message'},-->
+<!--                  {'col-12': key === 'message'},-->
+<!--                  'q-pr-sm'-->
+<!--                ]"-->
+<!--                        >-->
+<!--                          {{ key }}: {{ value }}-->
+<!--                        </div>-->
+<!--                      </div>-->
+<!--                    </q-td>-->
                   </q-tr>
                 </template>
               </q-table>
+              <div class="row justify-end q-mt-sm">
+                <q-pagination
+                  v-model="currentPage"
+                  :max="logCount / 5 - 1"
+                  input
+                  @update:model-value="chagePagination"
+                />
+              </div>
             </q-tab-panel>
-            <q-tab-panel name="warn" class="no-padding">
+            <q-tab-panel name="warn" class="no-padding" >
               <q-table
                 class="my-sticky-column-table"
                 flat

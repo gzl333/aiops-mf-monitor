@@ -5,7 +5,7 @@ import { computed, ref } from 'vue'
 // import { useRoute, useRouter } from 'vue-router'
 // import { i18n } from 'boot/i18n'
 import LineChart from 'components/chart/LineChart.vue'
-import HistogramChart from 'components/chart/HistogramChart.vue'
+import PieChart from 'components/chart/PieChart.vue'
 
 // const props = defineProps({
 //   foo: {
@@ -39,13 +39,18 @@ const taskArr = [
   { name: '任务12', link: 'https://aiops.cstcloud.cn/', status: '高延时', delayed: '100ms' },
   { name: '任务13', link: 'https://aiops.cstcloud.cn/', status: '流畅', delayed: '100ms' },
   { name: '任务14', link: 'https://aiops.cstcloud.cn/', status: '异常', delayed: '100ms' },
-  { name: '任务15', link: 'https://aiops.cstcloud.cn/', status: '异常', delayed: '100ms' }
+  { name: '任务15', link: 'https://aiops.cstcloud.cn/', status: '异常', delayed: '100ms' },
+  { name: '任务16', link: 'https://aiops.cstcloud.cn/', status: '高延时', delayed: '100ms' },
+  { name: '任务17', link: 'https://aiops.cstcloud.cn/', status: '流畅', delayed: '100ms' },
+  { name: '任务18', link: 'https://aiops.cstcloud.cn/', status: '异常', delayed: '100ms' },
+  { name: '任务19', link: 'https://aiops.cstcloud.cn/', status: '高延时', delayed: '100ms' },
+  { name: '任务20', link: 'https://aiops.cstcloud.cn/', status: '流畅', delayed: '100ms' }
 ]
 const cpuOption = computed(() => ({
   title: {
     text: '24小时任务状态比例',
     textStyle: {
-      fontSize: 15
+      fontSize: 16
     }
   },
   tooltip: {
@@ -109,102 +114,88 @@ const cpuOption = computed(() => ({
     }
   ]
 }))
-const data = [
-  [500, 1000, 678.71],
-  [400, 1000, 682],
-  [300, 650, 446.33],
-  [250, 560, 379.83],
-  [200, 400, 306],
-  [200, 400, 322.33],
-  [250, 400, 313.33],
-  [180, 400, 310],
-  [200, 350, 275],
-  [200, 300, 250],
-  [180, 300, 243.33],
-  [200, 270, 235],
-  [150, 280, 215]
-]
-const cities = ['0ms-100ms', '100ms-300ms', '300ms-500ms', '500ms-700ms', '700ms-900ms', '900ms-1300ms', '1300ms-1500ms', '1500ms-2000ms', '2000ms-2500ms', '2500ms-3000ms', '3000ms-3500ms', '3500ms-4000ms', '4000ms-5000ms']
-const barHeight = 50
 const dataOption = computed(() => ({
   title: {
-    text: '各区间耗时分布'
-  },
-  legend: {
-    show: true,
-    top: 'bottom',
-    data: ['Range', 'Average']
-  },
-  grid: {
-    top: 100
-  },
-  angleAxis: {
-    type: 'category',
-    data: cities
-  },
-  tooltip: {
-    show: true,
-    // eslint-disable-next-line
-    formatter: function (params: any) {
-      const id = params.dataIndex
-      return (
-        cities[id] +
-        '<br>Lowest：' +
-        data[id][0] +
-        '<br>Highest：' +
-        data[id][1] +
-        '<br>Average：' +
-        data[id][2]
-      )
+    text: '各区间耗时分布',
+    textStyle: {
+      fontSize: 16
     }
   },
-  radiusAxis: {},
-  polar: {},
+  tooltip: {
+    trigger: 'item',
+    formatter: '{a} <br/>{b}: {c} ({d}%)'
+  },
+  legend: {
+    top: 30
+  },
   series: [
     {
-      type: 'bar',
-      itemStyle: {
-        color: 'transparent'
+      name: '状态占比',
+      type: 'pie',
+      selectedMode: 'single',
+      radius: [0, '30%'],
+      label: {
+        position: 'inner',
+        fontSize: 14
       },
-      data: data.map(function (d) {
-        return d[0]
-      }),
-      coordinateSystem: 'polar',
-      stack: 'Min Max',
-      silent: true
-    },
-    {
-      type: 'bar',
-      data: data.map(function (d) {
-        return d[1] - d[0]
-      }),
-      coordinateSystem: 'polar',
-      name: 'Range',
-      stack: 'Min Max'
-    },
-    {
-      type: 'bar',
-      itemStyle: {
-        color: 'transparent'
+      labelLine: {
+        show: false
       },
-      data: data.map(function (d) {
-        return d[2] - barHeight
-      }),
-      coordinateSystem: 'polar',
-      stack: 'Average',
-      silent: true,
-      z: 10
+      data: [
+        { value: 1548, name: '高延时' },
+        { value: 775, name: '流畅' },
+        { value: 679, name: '异常' }
+      ]
     },
     {
-      type: 'bar',
-      data: data.map(function () {
-        return barHeight * 2
-      }),
-      coordinateSystem: 'polar',
-      name: 'Average',
-      stack: 'Average',
-      barGap: '-100%',
-      z: 10
+      name: '耗时占比',
+      type: 'pie',
+      radius: ['45%', '60%'],
+      labelLine: {
+        length: 30
+      },
+      label: {
+        formatter: '{a|{a}}{abg|}\n{hr|}\n  {b|{b}：}{c}  {per|{d}%}  ',
+        backgroundColor: '#F6F8FC',
+        borderColor: '#8C8D8E',
+        borderWidth: 1,
+        borderRadius: 4,
+        rich: {
+          a: {
+            color: '#6E7079',
+            lineHeight: 22,
+            align: 'center'
+          },
+          hr: {
+            borderColor: '#8C8D8E',
+            width: '100%',
+            borderWidth: 1,
+            height: 0
+          },
+          b: {
+            color: '#4C5058',
+            fontSize: 14,
+            fontWeight: 'bold',
+            lineHeight: 33
+          },
+          per: {
+            color: '#fff',
+            backgroundColor: '#4C5058',
+            padding: [3, 4],
+            borderRadius: 4
+          }
+        }
+      },
+      data: [
+        { value: 1048, name: '0ms-500ms' },
+        { value: 335, name: '500ms-1000ms' },
+        { value: 310, name: '1000ms-1500ms' },
+        { value: 251, name: '1500ms-2000ms' },
+        { value: 234, name: '20000ms-2500ms' },
+        { value: 147, name: '2500ms-3000ms' },
+        { value: 135, name: '3000ms-4000ms' },
+        { value: 102, name: '4000ms-5000ms' }
+      ]
     }
   ]
 }))
@@ -212,14 +203,14 @@ const dataOption = computed(() => ({
 
 <template>
   <div class="WebOverall">
-    <div class="text-h6">网页实时状态概览（5分钟内）</div>
-    <div class="q-mt-md">
-      <line-chart :option="cpuOption"/>
-    </div>
+    <div class="text-h6">网页实时状态概览</div>
     <div class="row q-mt-md">
       <q-select outlined dense v-model="model" :options="options" label="请选择" class="col-3" />
     </div>
-    <div class="q-mt-md row">
+    <div class="q-mt-md">
+      <line-chart :option="cpuOption"/>
+    </div>
+    <div class="q-mt-lg row">
       <q-card flat bordered class="my-card col-5">
         <div v-for="(item, index) in taskArr" :key="index" class="q-px-sm">
           <div class="row justify-between items-center">
@@ -248,7 +239,7 @@ const dataOption = computed(() => ({
         </div>
       </q-card>
       <div class="col-7">
-        <histogram-chart height="600" :option="dataOption"/>
+        <pie-chart height="730" :option="dataOption"/>
       </div>
     </div>
   </div>

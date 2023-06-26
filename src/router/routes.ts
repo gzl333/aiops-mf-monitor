@@ -7,8 +7,12 @@ const routes: RouteRecordRaw[] = [
   {
     path: appPath,
     component: () => import('layouts/MainLayout.vue'),
-    redirect: appPath + '/meeting',
+    redirect: appPath + '/cstn',
     children: [
+      {
+        path: 'cstn',
+        component: () => import('pages/cstn/CstnIndex.vue')
+      },
       {
         path: 'meeting',
         component: () => import('pages/meeting/VideoMeetingIndex.vue')
@@ -50,6 +54,18 @@ const routes: RouteRecordRaw[] = [
             component: () => import('pages/mail/MailSystemList.vue')
           }
         ]
+      },
+      {
+        path: 'server',
+        component: () => import('pages/server/ServerPage.vue')
+      },
+      {
+        path: 'ceph',
+        component: () => import('pages/ceph/CephPage.vue')
+      },
+      {
+        path: 'tidb',
+        component: () => import('pages/tidb/TidbPage.vue')
       },
       // @mimas: about, updates, releases...
       {

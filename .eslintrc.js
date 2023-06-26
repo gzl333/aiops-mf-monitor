@@ -88,7 +88,7 @@ module.exports = {
     'import/named': 'off',
 
     'prefer-promise-reject-errors': 'off',
-
+    camelcase: 'off',
     quotes: ['warn', 'single', { avoidEscape: true }],
 
     // this rule, if on, would require explicit return type on the `render` function
@@ -115,6 +115,6 @@ module.exports = {
     '@typescript-eslint/no-unsafe-return': 'off',
     '@typescript-eslint/restrict-plus-operands': 'off',
     '@typescript-eslint/unbound-method': 'off',
-    '@typescript-eslint/restrict-template-expressions': 'off',
+    '@typescript-eslint/restrict-template-expressions': 'off'
   }
 }

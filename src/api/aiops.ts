@@ -71,7 +71,26 @@ export default {
         disk_used?: number
       }}) {
       const data = payload.body
-      return axiosAiops.post('v1/mail/metric/warning/', data)
+      return axiosAiops.post('v1/mail/machine/threshold/', data)
+    },
+    // 获取日志信息
+    getMailLog (payload: {query: {
+        timestamp?: number,
+        timestamp__lt?: number,
+        timestamp__gt?: number,
+        timestamp__gte?: number
+        timestamp__lte?: number,
+        instance?: string,
+        log_name?: string,
+        log_source?: string
+        ordering?: string,
+        page?: number,
+        page_size?: number
+      }}) {
+      const config = {
+        params: payload?.query
+      }
+      return axiosAiops.get('v1/mail/log/', config)
     }
   }
 }

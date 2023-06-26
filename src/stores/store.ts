@@ -6,8 +6,34 @@ import { i18n } from 'boot/i18n'
 import ModifyWarningLine from 'components/mail/ModifyWarningLine.vue'
 import WebTaskReviseDialog from 'components/web/WebTaskReviseDialog.vue'
 import WebTaskDeleteDialog from 'components/web/WebTaskDeleteDialog.vue'
-
 const { tc } = i18n.global
+
+export interface DataCenterInterface {
+  // 来自registry接口
+  abbreviation: string
+  creation_time: string
+  desc: string
+  endpoint_compute: never // null 待细化
+  endpoint_monitor: never // null 待细化
+  endpoint_object: never // null 待细化
+  endpoint_vms: string
+  id: string
+  longitude: number
+  latitude: number
+  name: string
+  name_en: string
+  sort_weight: number
+  status: {
+    code: number
+    message: string
+  },
+  // 来自service接口
+  services: string[] // 全部services汇总
+  // personalServices: string[] // 用户可用services汇总
+  serverUnit: number
+  cephUnit: number
+  tidbUnit: number
+}
 export interface StatusArrayInterface {
   metric: {
     ipv4s: string[]
@@ -141,6 +167,27 @@ export interface DetectionPointInterface {
   name_en: string
   remark: string
 }
+
+export interface ServiceUnitInterface {
+  creation: string
+  dashboard_url: string
+  grafana_url: string
+  id: string
+  job_tag: string
+  name: string
+  name_en: string
+  organization: {
+    abbreviation: string
+    creation: string
+    id: string
+    name: string
+    name_en: string
+    sort_weight: number
+  }
+  remark: string
+  sort_weight: number
+  version: string
+}
 export const useStore = defineStore('main', {
   state: () => ({
     items: {
@@ -149,6 +196,11 @@ export const useStore = defineStore('main', {
       currentPath: [] as string[]
     },
     tables: {
+      dataCenterTable: {
+        byId: {} as Record<string, DataCenterInterface>,
+        allIds: [],
+        isLoaded: false
+      },
       detectionPointTable: {
         byId: {} as Record<string, DetectionPointInterface>,
         allIds: [],
@@ -162,6 +214,51 @@ export const useStore = defineStore('main', {
     }
   }),
   getters: {
+    getAllMonitoringOrganization: state => (type: string): DataCenterInterface[] => {
+      const allOrganizations: DataCenterInterface[] = []
+      let sort = 0
+      if (type === 'server') {
+        state.tables.dataCenterTable.allIds.forEach(id => {
+          if (state.tables.dataCenterTable.byId[id].serverUnit > 0) {
+            const organization = state.tables.dataCenterTable.byId[id]
+            if (state.tables.dataCenterTable.byId[id].sort_weight >= sort) {
+              allOrganizations.push(organization)
+              sort = state.tables.dataCenterTable.byId[id].sort_weight
+            } else {
+              allOrganizations.unshift(organization)
+              sort = state.tables.dataCenterTable.byId[id].sort_weight
+            }
+          }
+        })
+      } else if (type === 'ceph') {
+        state.tables.dataCenterTable.allIds.forEach(id => {
+          if (state.tables.dataCenterTable.byId[id].cephUnit > 0) {
+            const organization = state.tables.dataCenterTable.byId[id]
+            if (state.tables.dataCenterTable.byId[id].sort_weight >= sort) {
+              allOrganizations.push(organization)
+              sort = state.tables.dataCenterTable.byId[id].sort_weight
+            } else {
+              allOrganizations.unshift(organization)
+              sort = state.tables.dataCenterTable.byId[id].sort_weight
+            }
+          }
+        })
+      } else {
+        state.tables.dataCenterTable.allIds.forEach(id => {
+          if (state.tables.dataCenterTable.byId[id].tidbUnit > 0) {
+            const organization = state.tables.dataCenterTable.byId[id]
+            if (state.tables.dataCenterTable.byId[id].sort_weight >= sort) {
+              allOrganizations.push(organization)
+              sort = state.tables.dataCenterTable.byId[id].sort_weight
+            } else {
+              allOrganizations.unshift(organization)
+              sort = state.tables.dataCenterTable.byId[id].sort_weight
+            }
+          }
+        })
+      }
+      return allOrganizations
+    },
     getDetectionPointTable: state => (): {value: string, label: string, labelEn: string}[] => {
       const pointOptions = []
       for (const service of Object.values(state.tables.detectionPointTable.byId)) {
@@ -187,11 +284,78 @@ export const useStore = defineStore('main', {
   },
   actions: {
     loadAllTables () {
-      if (!this.tables.webMonitorTable.isLoaded) {
-        void this.loadWebMonitorTable()
+      if (!this.tables.dataCenterTable.isLoaded) {
+        void this.loadDataCenterTable().then(() => {
+          void this.loadUnitDataCenter()
+        })
       }
       if (!this.tables.detectionPointTable.isLoaded) {
         void this.loadDetectionPointTable()
+      }
+      if (!this.tables.webMonitorTable.isLoaded) {
+        void this.loadWebMonitorTable()
+      }
+    },
+    async loadDataCenterTable () {
+      this.tables.dataCenterTable = {
+        byId: {},
+        allIds: [],
+        isLoaded: false
+      }
+      const respDataCenter = await service.registry.getRegistry()
+      const dataCenter = new schema.Entity('dataCenter', {})
+      respDataCenter.data.registries.forEach((data: Record<string, never>) => {
+        const normalizedData = normalize(data, dataCenter)
+        Object.values(normalizedData.entities.dataCenter!)[0].services = []
+        Object.values(normalizedData.entities.dataCenter!)[0].personalServices = []
+        Object.assign(this.tables.dataCenterTable.byId, normalizedData.entities.dataCenter)
+        // @ts-ignore
+        this.tables.dataCenterTable.allIds.unshift(Object.keys(normalizedData.entities.dataCenter)[0])
+        this.tables.dataCenterTable.allIds = [...new Set(this.tables.dataCenterTable.allIds)]
+      })
+      this.tables.dataCenterTable.isLoaded = true
+    },
+    loadUnitDataCenter () {
+      for (const id of this.tables.dataCenterTable.allIds) {
+        service.monitor.getMonitorUnitServer({
+          query: {
+            page: 1,
+            page_size: 10,
+            organization_id: id
+          }
+        }).then((res) => {
+          if (res.data.results.length > 0) {
+            this.tables.dataCenterTable.byId[id].serverUnit = res.data.count
+          } else {
+            this.tables.dataCenterTable.byId[id].serverUnit = 0
+          }
+        })
+        service.monitor.getMonitorUnitCeph({
+          query: {
+            page: 1,
+            page_size: 10,
+            organization_id: id
+          }
+        }).then((res) => {
+          if (res.data.results.length > 0) {
+            this.tables.dataCenterTable.byId[id].cephUnit = res.data.count
+          } else {
+            this.tables.dataCenterTable.byId[id].cephUnit = 0
+          }
+        })
+        service.monitor.getMonitorUnitTidb({
+          query: {
+            page: 1,
+            page_size: 10,
+            organization_id: id
+          }
+        }).then((res) => {
+          if (res.data.results.length > 0) {
+            this.tables.dataCenterTable.byId[id].tidbUnit = res.data.count
+          } else {
+            this.tables.dataCenterTable.byId[id].tidbUnit = 0
+          }
+        })
       }
     },
     async loadDetectionPointTable () {

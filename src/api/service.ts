@@ -6,7 +6,48 @@
 import { axiosService } from 'boot/axios'
 
 export default {
+  registry: {
+    getRegistry () {
+      return axiosService.get('/registry')
+    }
+  },
   monitor: {
+    getMonitorServerQuery (payload: { query: { monitor_unit_id: string; query: string } }) {
+      const config = {
+        params: payload.query
+      }
+      return axiosService.get('/monitor/server/query', config)
+    },
+    getMonitorUnitServer (payload?: { query: { page: number; page_size: number, organization_id: string } }) {
+      const config = {
+        params: payload?.query
+      }
+      return axiosService.get('/monitor/unit/server', config)
+    },
+    getMonitorUnitCeph (payload?: { query: { page: number; page_size: number, organization_id: string } }) {
+      const config = {
+        params: payload?.query
+      }
+      return axiosService.get('/monitor/unit/ceph', config)
+    },
+    getMonitorUnitTidb (payload?: { query: { page: number, page_size: number, organization_id: string }}) {
+      const config = {
+        params: payload?.query
+      }
+      return axiosService.get('/monitor/unit/tidb', config)
+    },
+    getMonitorTidbQuery (payload: { query: { monitor_unit_id: string; query: string } }) {
+      const config = {
+        params: payload.query
+      }
+      return axiosService.get('/monitor/tidb/query', config)
+    },
+    getMonitorCephQuery (payload: { query: { monitor_unit_id: string; query: string } }) {
+      const config = {
+        params: payload.query
+      }
+      return axiosService.get('/monitor/ceph/query', config)
+    },
     getMonitorVideoQuery (payload: { query: { query: string } }) {
       const config = {
         params: payload.query
