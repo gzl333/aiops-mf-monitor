@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount } from 'vue'
+import { computed, ref, onBeforeMount, onBeforeUnmount } from 'vue'
 // import { navigateToUrl } from 'single-spa'
 import { UnitInterface, useStore } from 'stores/store'
-// import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 // import { i18n } from 'boot/i18n'
 import aiops from 'src/api/aiops'
 import { date } from 'quasar'
@@ -62,6 +62,21 @@ interface NetworkDataInterface {
     retransSegs: string[]
   }
 }
+interface F5FlowObjInterface {
+  cpu: {
+    total: string[]
+  },
+  mem: {
+    tmm: string[],
+    host: string[]
+  },
+  flow: {
+    clientBytesIn: string[],
+    clientBytesOut: string[],
+    serverBytesIn: string[],
+    serverBytesOut: string[]
+  }
+}
 interface WarningLineInterface {
   instance: string
   cpu_rate: number
@@ -76,9 +91,14 @@ interface LogInterface {
   timestamp: number
 }
 const store = useStore()
-// const route = useRoute()
+const route = useRoute()
 // const router = useRouter()
+console.log('route', route)
 // const tc = i18n.global.tc
+const routeInstance = route.query.instance as string
+const routeCategory = route.query.category as string
+const routeStart = route.query.start as string
+const routeEnd = route.query.end as string
 const timeStamp = Date.now()
 const formattedString = date.formatDate(timeStamp, 'YYYY-MM-DD HH:mm')
 const endTime = ref(formattedString)
@@ -92,7 +112,6 @@ const tab = ref('sequential')
 // eslint-disable-next-line
 const cardInfo: any = ref({})
 const isRight = ref(false)
-const isShow = ref(false)
 let unitInstance = ''
 const unitQuery = ref({
   value: 'host',
@@ -101,7 +120,7 @@ const unitQuery = ref({
 })
 const isChange = ref('')
 const xAxis = ref<string[]>([])
-const unitOptions = [
+const categoryOptions = [
   {
     value: 'host',
     label: '主机',
@@ -192,6 +211,22 @@ const warningLineObj = ref<WarningLineInterface>({
   memory_used: 0,
   disk_used: 0
 })
+const f5FlowObj = ref<F5FlowObjInterface>({
+  cpu: {
+    total: []
+  },
+  mem: {
+    tmm: [],
+    host: []
+  },
+  flow: {
+    clientBytesIn: [],
+    clientBytesOut: [],
+    serverBytesIn: [],
+    serverBytesOut: []
+  }
+})
+// 主机 tomcat nginx mysql
 const cpuOption = computed(() => ({
   title: {
     text: 'CPU使用率',
@@ -201,6 +236,10 @@ const cpuOption = computed(() => ({
   },
   tooltip: {
     trigger: 'axis'
+    // formatter: '类目值：{b0}<br/> {a0}:{c0}封 <br/>{a1}:{c1}个 <br/>{a2}:{c2}条'
+    // formatter: function (params: Record<string, any>) {
+    //   console.log(params)
+    // }
   },
   toolbox: {
     showTitle: false,
@@ -676,14 +715,151 @@ const flowOption = computed(() => ({
     }
   ]
 }))
+// 负载均衡
+const f5CpuOption = computed(() => ({
+  title: {
+    text: 'CPU使用率',
+    textStyle: {
+      fontSize: 15
+    }
+  },
+  tooltip: {
+    trigger: 'axis'
+    // formatter: '类目值：{b0}<br/> {a0}:{c0}封 <br/>{a1}:{c1}个 <br/>{a2}:{c2}条'
+    // formatter: function (params: Record<string, any>) {
+    //   console.log(params)
+    // }
+  },
+  legend: {
+    top: 30
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: xAxis.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: [
+    {
+      name: '使用率',
+      type: 'line',
+      data: f5FlowObj.value.cpu.total
+    }
+  ]
+}))
+const f5MemOption = computed(() => ({
+  title: {
+    text: '内存信息',
+    textStyle: {
+      fontSize: 15
+    }
+  },
+  tooltip: {
+    trigger: 'axis'
+  },
+  legend: {
+    top: 30
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: xAxis.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: [
+    {
+      name: 'TMM',
+      type: 'line',
+      data: f5FlowObj.value.mem.tmm
+    },
+    {
+      name: '主机',
+      type: 'line',
+      data: f5FlowObj.value.mem.host
+    }
+  ]
+}))
+const f5FlowOption = computed(() => ({
+  title: {
+    text: '流量使用',
+    textStyle: {
+      fontSize: 15
+    }
+  },
+  tooltip: {
+    trigger: 'axis'
+    // formatter: '类目值：{b0}<br/> {a0}:{c0}封 <br/>{a1}:{c1}个 <br/>{a2}:{c2}条'
+    // formatter: function (params: Record<string, any>) {
+    //   console.log(params)
+    // }
+  },
+  legend: {
+    top: 30
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: xAxis.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: [
+    {
+      name: '客户端入站流量',
+      type: 'line',
+      data: f5FlowObj.value.flow.clientBytesIn
+    },
+    {
+      name: '客户端出站流量',
+      type: 'line',
+      data: f5FlowObj.value.flow.clientBytesOut
+    },
+    {
+      name: '服务器入站流量',
+      type: 'line',
+      data: f5FlowObj.value.flow.serverBytesIn
+    },
+    {
+      name: '服务器出站流量',
+      type: 'line',
+      data: f5FlowObj.value.flow.serverBytesOut,
+      lineStyle: {
+        color: '#91c7ae'
+      }
+    }
+  ]
+}))
+
 const logColumns = [
   {
     name: 'time',
     required: true,
     label: '时间',
     align: 'center',
-    field: row => row.time,
-    format: val => `${val}`
+    field: 'time'
   },
   { name: 'source', align: 'center', label: '日志源', field: 'logType' },
   {
@@ -788,12 +964,20 @@ const rows1 = ref([
     state: '处理中'
   }
 ])
+const getUnitList = async (val: Record<string, string>) => {
+  const res = await aiops.mail.getMailMachine({ query: { category: val.value, page: 1, page_size: 100 } })
+  unitList.value = res.data.results
+  allUnitList = res.data.results
+}
 const search = () => {
   if (queryText.value === '') {
     unitList.value = allUnitList
   } else {
     unitList.value = allUnitList.filter(item => item.instance.indexOf(queryText.value) !== -1)
   }
+}
+const changeTime = () => {
+  getDetail(unitInstance)
 }
 const getWarnLine = (instance: string) => {
   aiops.mail.getMetricWarning({ query: { instance } }).then((warningRes) => {
@@ -838,7 +1022,13 @@ const getDetail = async (instance: string) => {
   networkChartData.value.socket.inSegs = []
   networkChartData.value.socket.outSegs = []
   networkChartData.value.socket.retransSegs = []
-  // const fieldRes = await aiops.mail.getMailMetricField({
+  f5FlowObj.value.flow.clientBytesIn = []
+  f5FlowObj.value.flow.clientBytesOut = []
+  f5FlowObj.value.flow.serverBytesIn = []
+  f5FlowObj.value.flow.serverBytesOut = []
+  f5FlowObj.value.mem.tmm = []
+  f5FlowObj.value.mem.host = []
+  // await aiops.mail.getMailMetricField({
   //   query: {
   //     instance
   //   }
@@ -854,11 +1044,10 @@ const getDetail = async (instance: string) => {
   if (dataArr.length > 0) {
     cardInfo.value = metricRes.data.results[dataArr[dataArr.length - 1]]
     if (unitQuery.value.value === 'host' || unitQuery.value.value === 'tomcat' || unitQuery.value.value === 'nginx' || unitQuery.value.value === 'mysql') {
-      isShow.value = true
       dataArr.forEach((item) => {
         let totalSize = 0
         let availSize = 0
-        xAxis.value.push(date.formatDate(Number(item) * 1000, 'HH:mm'))
+        xAxis.value.push(date.formatDate(Number(metricRes.data.results[item].timestamp) * 1000, 'HH:mm'))
         resourcesChartData.value.cpu.total.push(Number(metricRes.data.results[item].cpu_rate).toFixed(2))
         resourcesChartData.value.cpu.user.push(Number(metricRes.data.results[item].cpu_user_rate).toFixed(2))
         resourcesChartData.value.cpu.disk.push(Number(metricRes.data.results[item].cpu_iowait_rate).toFixed(2))
@@ -880,17 +1069,31 @@ const getDetail = async (instance: string) => {
         networkChartData.value.socket.inSegs.push(Number(metricRes.data.results[item].socket_Tcp_InSegs).toFixed(2))
         networkChartData.value.socket.outSegs.push(Number(metricRes.data.results[item].socket_Tcp_OutSegs).toFixed(2))
         networkChartData.value.socket.retransSegs.push(Number(metricRes.data.results[item].socket_Tcp_RetransSegs).toFixed(2))
-        metricRes.data.results[item].filesystem_size.forEach((size) => {
-          totalSize += Number(size.filesystem_size)
-        })
-        metricRes.data.results[item].filesystem_avail.forEach((size) => {
-          availSize += Number(size.filesystem_avail)
-        })
+        if (metricRes.data.results[item].filesystem_size) {
+          metricRes.data.results[item].filesystem_size.forEach((size) => {
+            totalSize += Number(size.filesystem_size)
+          })
+        }
+        if (metricRes.data.results[item].filesystem_avail) {
+          metricRes.data.results[item].filesystem_avail.forEach((size) => {
+            availSize += Number(size.filesystem_avail)
+          })
+        }
         resourcesChartData.value.disk.use.push((availSize / 1024 / 1024 / 1024).toFixed(2))
         resourcesChartData.value.disk.total.push((totalSize / 1024 / 1024 / 1024).toFixed(2))
       })
+    } else if (unitQuery.value.value === 'f5') {
+      dataArr.forEach((item) => {
+        xAxis.value.push(date.formatDate(Number(item) * 1000, 'HH:mm'))
+        f5FlowObj.value.cpu.total.push(Number(metricRes.data.results[item].cpu_rate).toFixed(2))
+        f5FlowObj.value.mem.tmm.push(Number((metricRes.data.results[item].memory_tmm) / 1024 / 1024 / 1024).toFixed(2))
+        f5FlowObj.value.mem.host.push(Number((metricRes.data.results[item].memory_host) / 1024 / 1024 / 1024).toFixed(2))
+        f5FlowObj.value.flow.clientBytesIn.push(Number(metricRes.data.results[item].sysStatClientBytesIn).toFixed(2))
+        f5FlowObj.value.flow.clientBytesOut.push(Number(metricRes.data.results[item].sysStatClientBytesOut).toFixed(2))
+        f5FlowObj.value.flow.serverBytesIn.push(Number(metricRes.data.results[item].sysStatServerBytesIn).toFixed(2))
+        f5FlowObj.value.flow.serverBytesOut.push(Number(metricRes.data.results[item].sysStatServerBytesOut).toFixed(2))
+      })
     } else {
-      isShow.value = false
       dataArr.forEach((item) => {
         xAxis.value.push(date.formatDate(Number(item) * 1000, 'HH:mm'))
         resourcesChartData.value.cpu.total.push(Number(metricRes.data.results[item].cpu_rate).toFixed(2))
@@ -900,15 +1103,6 @@ const getDetail = async (instance: string) => {
   }
   getWarnLine(instance)
 }
-const changeUnit = async (val: Record<string, string>) => {
-  const res = await aiops.mail.getMailMachine({ query: { category: val.value, page: 1, page_size: 100 } })
-  unitList.value = res.data.results
-  allUnitList = res.data.results
-}
-changeUnit(unitQuery.value)
-const changeTime = () => {
-  getDetail(unitInstance)
-}
 const currentPage = ref(1)
 const logCount = ref(0)
 const logTab = async () => {
@@ -916,15 +1110,24 @@ const logTab = async () => {
     query: {
       instance: unitInstance,
       page: currentPage.value,
-      page_size: 5
+      page_size: 10
     }
   })
   logRows.value = logRes.data.results
   logCount.value = logRes.data.count
 }
-const chagePagination = () => {
+const changePagination = () => {
   logTab()
 }
+onBeforeMount(async () => {
+  if (routeInstance && routeCategory && routeStart && routeEnd) {
+    unitQuery.value = categoryOptions.find((category) => category.value === routeCategory)
+    startTime.value = date.formatDate(Number(routeStart) * 1000, 'YYYY-MM-DD HH:mm')
+    endTime.value = date.formatDate(Number(routeEnd) * 1000, 'YYYY-MM-DD HH:mm')
+  }
+  await getUnitList(unitQuery.value)
+  await getDetail(routeInstance)
+})
 $bus.on('warn', async (value: boolean) => {
   if (value) {
     await getWarnLine(unitInstance)
@@ -940,8 +1143,8 @@ onBeforeUnmount(() => {
     <div class="row justify-between q-mt-md">
       <div class="row col-3 items-center justify-between">
         <div class="text-subtitle1">监控单元</div>
-        <q-select outlined dense v-model="unitQuery" :options="unitOptions" label="请选择" class="col-9"
-                  @update:model-value="changeUnit"/>
+        <q-select outlined dense v-model="unitQuery" :options="categoryOptions" label="请选择" class="col-9"
+                  @update:model-value="getUnitList"/>
       </div>
       <div class="row items-center">
         <div class="text-subtitle1">时间选择</div>
@@ -1062,22 +1265,39 @@ onBeforeUnmount(() => {
                     label="资源"
                   >
                   <q-separator/>
-                    <q-card>
+                    <q-card v-if="unitQuery.value === 'host' || unitQuery.value === 'tomcat' || unitQuery.value === 'nginx' || unitQuery.value === 'mysql'">
                       <q-card-section class="row">
                         <div class="col-6">
                           <line-chart :option="cpuOption"/>
                         </div>
-                        <div class="col-6" v-if="isShow">
+                        <div class="col-6">
                           <line-chart :option="memOption"/>
                         </div>
-                        <div class="col-6 q-mt-lg" v-if="isShow">
+                        <div class="col-6 q-mt-lg">
                           <line-chart :option="diskOption"/>
                         </div>
                       </q-card-section>
                     </q-card>
+                  <q-card v-if="unitQuery.value === 'f5'">
+                    <q-card-section class="row">
+                      <div class="col">
+                        <line-chart :option="f5CpuOption"/>
+                      </div>
+                      <div class="col">
+                        <line-chart :option="f5MemOption"/>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                  <q-card v-if="unitQuery.value === 'vpn' || unitQuery.value === 'firewall' || unitQuery.value === 'switch'">
+                    <q-card-section class="row">
+                      <div class="col-6">
+                        <line-chart :option="f5CpuOption"/>
+                      </div>
+                    </q-card-section>
+                  </q-card>
                   </q-expansion-item>
                 <q-expansion-item
-                    v-if="isShow"
+                    v-if="unitQuery.value === 'host' || unitQuery.value === 'tomcat' || unitQuery.value === 'nginx' || unitQuery.value === 'mysql'"
                     switch-toggle-side
                     expand-separator
                     default-opened
@@ -1093,14 +1313,13 @@ onBeforeUnmount(() => {
                     </q-card>
                   </q-expansion-item>
                 <q-expansion-item
-                    v-if="isShow"
                     switch-toggle-side
                     expand-separator
                     default-opened
                     label="网络"
                   >
                   <q-separator/>
-                    <q-card>
+                    <q-card v-if="unitQuery.value === 'host' || unitQuery.value === 'tomcat' || unitQuery.value === 'nginx' || unitQuery.value === 'mysql'">
                       <q-card-section class="row">
                         <div class="col-6">
                           <line-chart :option="bandwidthOption"/>
@@ -1113,6 +1332,13 @@ onBeforeUnmount(() => {
                         </div>
                       </q-card-section>
                     </q-card>
+                  <q-card v-if="unitQuery.value === 'f5'">
+                    <q-card-section class="row">
+                      <div class="col-6">
+                        <line-chart :option="f5FlowOption"/>
+                      </div>
+                    </q-card-section>
+                  </q-card>
                   </q-expansion-item>
                 </q-list>
             </q-tab-panel>
@@ -1126,6 +1352,7 @@ onBeforeUnmount(() => {
                 :columns="logColumns"
                 hide-pagination
                 no-data-label="暂无日志信息"
+                :pagination="{ rowsPerPage: 0 }"
               >
                 <template v-slot:body="props">
                   <q-tr :props="props">
@@ -1163,9 +1390,9 @@ onBeforeUnmount(() => {
               <div class="row justify-end q-mt-sm">
                 <q-pagination
                   v-model="currentPage"
-                  :max="logCount / 5 - 1"
+                  :max="logCount / 10"
                   input
-                  @update:model-value="chagePagination"
+                  @update:model-value="changePagination"
                 />
               </div>
             </q-tab-panel>

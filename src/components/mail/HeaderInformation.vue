@@ -181,6 +181,10 @@ const props = defineProps({
           <span>F5设备上所有TCP连接的总数：</span>
           <span>{{ Number(props.dataInfo.sysTcpStatConnects).toFixed(2) }}</span>
         </div>
+        <div class="q-mt-xs">
+          <span>F5设备上所有服务器连接的总数：</span>
+          <span>{{ Number(props.dataInfo.sysStatServerTotConns).toFixed(2) }}</span>
+        </div>
       </q-card-section>
       <q-card-section class="col-4">
         <div class="q-mt-xs">
@@ -225,10 +229,6 @@ const props = defineProps({
           <span>F5设备上当前所有服务器连接的连接数：</span>
           <span>{{ Number(props.dataInfo.sysStatServerCurConns).toFixed(2) }}</span>
         </div>
-        <div class="q-mt-xs">
-          <span>F5设备上所有服务器连接的总数：</span>
-          <span>{{ Number(props.dataInfo.sysStatServerTotConns).toFixed(2) }}</span>
-        </div>
       </q-card-section>
     </q-card>
     <q-card flat bordered class="my-card row" :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2'" v-if="props.type === 'vpn'">
@@ -238,21 +238,25 @@ const props = defineProps({
           <span>{{ props.dataInfo.cpu_rate ? props.dataInfo.cpu_rate + '%' : '/'}}</span>
         </div>
         <div class="q-mt-xs">
-          <span>入包数：</span>
-          <span>{{ props.dataInfo.packet_in ? props.dataInfo.packet_in + 'Bytes/s' : '/' }}</span>
+          <span>vpn指标：</span>
+          <span>{{ props.dataInfo.user_in ? props.dataInfo.user_in : '/' }}</span>
         </div>
-        <div class="q-mt-xs">
-          <span>出包数：</span>
-          <span>{{ props.dataInfo.packet_out ? props.dataInfo.packet_out + 'Bytes/s' : '/' }}</span>
-        </div>
-        <div class="q-mt-xs">
-          <span>入流量：</span>
-          <span>{{ props.dataInfo.flow_in ? props.dataInfo.flow_in + 'Bytes/s' : '/' }}</span>
-        </div>
-        <div class="q-mt-xs">
-          <span>出流量：</span>
-          <span>{{ props.dataInfo.flow_out ? props.dataInfo.flow_out + 'Bytes/s' : '/' }}</span>
-        </div>
+<!--        <div class="q-mt-xs">-->
+<!--          <span>入包数：</span>-->
+<!--          <span>{{ props.dataInfo.packet_in ? props.dataInfo.packet_in + 'Bytes/s' : '/' }}</span>-->
+<!--        </div>-->
+<!--        <div class="q-mt-xs">-->
+<!--          <span>出包数：</span>-->
+<!--          <span>{{ props.dataInfo.packet_out ? props.dataInfo.packet_out + 'Bytes/s' : '/' }}</span>-->
+<!--        </div>-->
+<!--        <div class="q-mt-xs">-->
+<!--          <span>入流量：</span>-->
+<!--          <span>{{ props.dataInfo.flow_in ? props.dataInfo.flow_in + 'Bytes/s' : '/' }}</span>-->
+<!--        </div>-->
+<!--        <div class="q-mt-xs">-->
+<!--          <span>出流量：</span>-->
+<!--          <span>{{ props.dataInfo.flow_out ? props.dataInfo.flow_out + 'Bytes/s' : '/' }}</span>-->
+<!--        </div>-->
       </q-card-section>
     </q-card>
   </div>

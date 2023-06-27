@@ -61,13 +61,13 @@ const appVersion = logs[0].version
 
             <q-item
               clickable
-              :active="activeItem === 'meeting'"
-              @click="navigateToUrl(appPath + '/meeting')"
+              :active="activeItem === 'mail'"
+              @click="navigateToUrl(appPath + '/mail')"
               active-class="active-item"
             >
               <q-item-section class="column items-center">
-                <q-icon name="las la-video" size="lg"/>
-                <div class="active-text text-center">{{ tc('视频会议') }}</div>
+                <q-icon name="las la-mail-bulk" size="lg"/>
+                <div class="active-text text-center">{{ tc('邮件系统') }}</div>
               </q-item-section>
             </q-item>
 
@@ -121,13 +121,13 @@ const appVersion = logs[0].version
 
             <q-item
               clickable
-              :active="activeItem === 'mail'"
-              @click="navigateToUrl(appPath + '/mail')"
+              :active="activeItem === 'meeting'"
+              @click="navigateToUrl(appPath + '/meeting')"
               active-class="active-item"
             >
               <q-item-section class="column items-center">
-                <q-icon name="las la-mail-bulk" size="lg"/>
-                <div class="active-text text-center">{{ tc('邮件系统') }}</div>
+                <q-icon name="las la-video" size="lg"/>
+                <div class="active-text text-center">{{ tc('视频会议') }}</div>
               </q-item-section>
             </q-item>
 

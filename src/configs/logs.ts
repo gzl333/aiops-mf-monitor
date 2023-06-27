@@ -1,6 +1,22 @@
 // 更新日志内容，版本降序排列
 export const logs = [
   {
+    version: 'v0.2.0',
+    date: '2023-06-27',
+    time: '08:15:25',
+    release_author: 'duyukuan',
+    updates: [
+      {
+        info: '迁移服务器模块、ceph模块、tidb模块至监控应用下',
+        commit_author: 'duyukuan'
+      },
+      {
+        info: '优化网站群模块全局页面',
+        commit_author: 'duyukuan'
+      }
+    ]
+  },
+  {
     version: 'v0.1.3',
     date: '2023-06-25',
     time: '15:45:25',
