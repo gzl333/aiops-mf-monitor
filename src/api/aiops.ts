@@ -92,5 +92,10 @@ export default {
       }
       return axiosAiops.get('v1/mail/log/', config)
     }
+  },
+  monitor: {
+    getStatusOverview () {
+      return axiosAiops.get('v1/monitor/status/overview/')
+    }
   }
 }

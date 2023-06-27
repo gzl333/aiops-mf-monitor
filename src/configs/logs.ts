@@ -1,6 +1,26 @@
 // 更新日志内容，版本降序排列
 export const logs = [
   {
+    version: 'v0.2.1',
+    date: '2023-06-27',
+    time: '17:15:25',
+    release_author: 'duyukuan',
+    updates: [
+      {
+        info: '调整优化邮件系统页面，包括图表以及数据',
+        commit_author: 'duyukuan'
+      },
+      {
+        info: '邮件系统页面接入日志信息',
+        commit_author: 'duyukuan'
+      },
+      {
+        info: '新建路由用于开发测试，开发网站群修改2.0',
+        commit_author: '郑玮蓁'
+      }
+    ]
+  },
+  {
     version: 'v0.2.0',
     date: '2023-06-27',
     time: '08:15:25',
