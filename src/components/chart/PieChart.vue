@@ -5,6 +5,7 @@ import { TooltipComponent, LegendComponent } from 'echarts/components'
 import { PieChart } from 'echarts/charts'
 import { LabelLayout } from 'echarts/features'
 import { CanvasRenderer } from 'echarts/renderers'
+import $bus from 'src/hooks/bus'
 
 echarts.use([
   TooltipComponent,
@@ -36,6 +37,11 @@ onMounted(() => {
   const chartResize = () => {
     chart.resize()
   }
+  chart.on('click', function (params) {
+    // 控制台打印数据的名称
+    console.log(params)
+    $bus.emit('mission_select', params)
+  })
   window.addEventListener('resize', chartResize)
   onBeforeUnmount(() => {
     window.removeEventListener('resize', chartResize)

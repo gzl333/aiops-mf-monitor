@@ -35,6 +35,14 @@ const routes: RouteRecordRaw[] = [
             component: () => import('pages/web/tamper/WebTamper.vue')
           },
           {
+            path: 'overall_test',
+            component: () => import('pages/web_test/WebOverall_test.vue')
+          },
+          {
+            path: 'accessibility_test',
+            component: () => import('pages/web_test/WebAccessibility_test.vue')
+          },
+          {
             path: 'create',
             component: () => import('pages/web/WebMonitorTaskCreate.vue')
           },

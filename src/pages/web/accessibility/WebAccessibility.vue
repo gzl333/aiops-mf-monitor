@@ -85,21 +85,22 @@ const delayOption = computed(() => ({
   },
   yAxis: {
     type: 'category',
-    data: ['<50ms', '50ms-100ms', '100ms-300ms', '300ms-600ms', '600ms-1s', '1s-3s']
+    data: ['<50ms', '50ms-100ms', '100ms-300ms', '300ms-600ms', '600ms-1s', '1s-3s', '>3s']
   },
   series: [
     {
       name: '探针1',
       type: 'bar',
-      data: [103, 239, 294, 1070, 1144, 6303]
+      data: [103, 239, 294, 1070, 1144, 6303, 200]
     },
     {
       name: '探针2',
       type: 'bar',
-      data: [195, 238, 300, 1194, 1311, 6810]
+      data: [195, 238, 300, 1194, 1311, 6810, 190]
     }
   ]
 }))
+
 const columns = [
   {
     name: 'name',

@@ -131,6 +131,18 @@ const appVersion = logs[0].version
               </q-item-section>
             </q-item>
 
+            <q-item
+              clickable
+              :active="activeItem === 'overall_test'"
+              @click="navigateToUrl(appPath + '/web/overall_test')"
+              active-class="active-item"
+            >
+              <q-item-section class="column items-center">
+                <q-icon name="las la-mail-bulk" size="lg"/>
+                <div class="active-text text-center">{{ tc('网站群测试') }}</div>
+              </q-item-section>
+            </q-item>
+
           </q-list>
 
           <div class="row justify-center q-pt-lg">
