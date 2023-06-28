@@ -96,6 +96,34 @@ export default {
   monitor: {
     getStatusOverview () {
       return axiosAiops.get('v1/monitor/status/overview/')
+    },
+    getDelayDistribution () {
+      return axiosAiops.get('v1/monitor/delay/distribution/')
+    },
+    getStatusRate (payload: {query: {
+      probe_id?: number
+      }}) {
+      const configs = {
+        params: payload?.query
+      }
+      return axiosAiops.get('v1/monitor/status/rate/', configs)
+    },
+    getStatusHourRate (payload: {query: {
+        probe_id?: number
+      }}) {
+      const configs = {
+        params: payload?.query
+      }
+      return axiosAiops.get('v1/monitor/status/hourRate/', configs)
+    },
+    getDistribution (payload: {query: {
+        probe_id?: number
+      }}) {
+      const configs = {
+        params: payload?.query
+      }
+      return axiosAiops.get('v1/monitor/distribution/', configs)
     }
+
   }
 }
