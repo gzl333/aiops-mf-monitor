@@ -11,7 +11,18 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: 'cstn',
-        component: () => import('pages/cstn/CstnIndex.vue')
+        component: () => import('pages/cstn/CstnIndex.vue'),
+        redirect: appPath + '/cstn/overall',
+        children: [
+          {
+            path: 'overall',
+            component: () => import('pages/cstn/overall/AllIndex.vue')
+          },
+          {
+            path: 'export',
+            component: () => import('pages/cstn/export/ExportIndex.vue')
+          }
+        ]
       },
       {
         path: 'meeting',

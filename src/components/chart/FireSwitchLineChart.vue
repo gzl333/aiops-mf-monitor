@@ -1,30 +1,39 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, toRefs } from 'vue'
 import * as echarts from 'echarts/core'
-import { TooltipComponent, LegendComponent } from 'echarts/components'
-import { PieChart } from 'echarts/charts'
-import { LabelLayout } from 'echarts/features'
+import {
+  TitleComponent,
+  ToolboxComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  MarkLineComponent,
+  MarkPointComponent
+} from 'echarts/components'
+import { LineChart } from 'echarts/charts'
+import { UniversalTransition } from 'echarts/features'
 import { CanvasRenderer } from 'echarts/renderers'
-import $bus from 'src/hooks/bus'
 
 echarts.use([
+  TitleComponent,
+  ToolboxComponent,
   TooltipComponent,
+  GridComponent,
   LegendComponent,
-  PieChart,
+  MarkLineComponent,
+  MarkPointComponent,
+  LineChart,
   CanvasRenderer,
-  LabelLayout
+  UniversalTransition
 ])
 
 const props = defineProps({
   option: {
     type: Object,
     required: true
-  },
-  height: {
-    type: String,
-    required: true
   }
 })
+
 const container = ref<HTMLElement>()
 // defineExpose({ })
 onMounted(() => {
@@ -32,15 +41,12 @@ onMounted(() => {
   chart.setOption(props.option)
   const { option } = toRefs(props)
   watch(option, () => {
+    chart.clear()
     chart.setOption(props.option)
   }, { deep: true })
   const chartResize = () => {
     chart.resize()
   }
-  chart.on('click', function (params) {
-    // 控制台打印数据的名称
-    $bus.emit('mission_select', params)
-  })
   window.addEventListener('resize', chartResize)
   onBeforeUnmount(() => {
     window.removeEventListener('resize', chartResize)
@@ -50,7 +56,7 @@ onMounted(() => {
 
 <template>
   <div class="LineChart" style="width: 100%">
-    <div ref="container" :style="{ width: '100%', height: props?.height + 'px'  }"></div>
+    <div ref="container" :style="{ width: '100%', height: '350px' }"></div>
   </div>
 </template>
 

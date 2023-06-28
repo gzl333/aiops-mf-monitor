@@ -1,6 +1,34 @@
 // 更新日志内容，版本降序排列
 export const logs = [
   {
+    version: 'v0.2.2',
+    date: '2023-06-27',
+    time: '17:15:15',
+    release_author: 'duyukuan',
+    updates: [
+      {
+        info: '调整优化邮件系统页面，对不同类别的数据进行分类，优化相关类别的图表数据',
+        commit_author: 'duyukuan'
+      },
+      {
+        info: '完善中国科技网布局以及tab信息',
+        commit_author: 'duyukuan'
+      },
+      {
+        info: '引入antv/g6插件，使用G6实现一个简单demo',
+        commit_author: 'duyukuan'
+      },
+      {
+        info: '网站群监控现有接口上线完毕，图表内联逻辑基本实现完成',
+        commit_author: '郑玮蓁'
+      },
+      {
+        info: '可访问性前端代码完善',
+        commit_author: '郑玮蓁'
+      }
+    ]
+  },
+  {
     version: 'v0.2.1',
     date: '2023-06-27',
     time: '17:15:25',

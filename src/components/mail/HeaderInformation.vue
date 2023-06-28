@@ -111,44 +111,8 @@ const props = defineProps({
         </div>
       </q-card-section>
     </q-card>
-    <q-card flat bordered class="my-card row" :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2'" v-if="props.type === 'switch'">
+    <q-card flat bordered class="my-card row" :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2'" v-if="props.type === 'switch' || props.type === 'firewall'">
       <q-card-section class="col-12">
-        <div>
-          <span>cpu使用率：</span>
-          <span>{{ props.dataInfo.cpu_rate ? props.dataInfo.cpu_rate + '%' : '/' }}</span>
-        </div>
-        <div class="q-mt-md row">
-          <div>交换机入包数：</div>
-          <div v-for="(item, index) in props.dataInfo.packet_in" :key="index" :class="index !== 0 ? 'q-ml-xl' : ''">
-            <span>{{ item.ifName }}</span>
-            <span class="q-ml-sm">{{ Number(item.packet_in).toFixed(2) }} Bytes/s</span>
-          </div>
-        </div>
-        <div class="q-mt-md row">
-          <div>交换机出包数：</div>
-          <div v-for="(item, index) in props.dataInfo.packet_out" :key="index" :class="index !== 0 ? 'q-ml-xl' : ''">
-            <span>{{ item.ifName }}</span>
-            <span class="q-ml-sm">{{ Number(item.packet_out).toFixed(2) }} Bytes/s</span>
-          </div>
-        </div>
-        <div class="q-mt-md row">
-          <div>交换机入流量：</div>
-          <div v-for="(item, index) in props.dataInfo.flow_in" :key="index" :class="index !== 0 ? 'q-ml-xl' : ''">
-            <span>{{ item.ifName }}</span>
-            <span class="q-ml-sm">{{ Number(item.flow_in).toFixed(2) }} Bytes/s</span>
-          </div>
-        </div>
-        <div class="q-mt-md row">
-          <div>交换机出流量：</div>
-          <div v-for="(item, index) in props.dataInfo.flow_out" :key="index" :class="index !== 0 ? 'q-ml-xl' : ''">
-            <span>{{ item.ifName }}</span>
-            <span class="q-ml-sm">{{ Number(item.flow_out).toFixed(2) }} Bytes/s</span>
-          </div>
-        </div>
-      </q-card-section>
-    </q-card>
-    <q-card flat bordered class="my-card row" :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2'" v-if="props.type === 'firewall'">
-      <q-card-section class="col-4">
         <div>
           <span>cpu使用率：</span>
           <span>{{ props.dataInfo.cpu_rate ? props.dataInfo.cpu_rate + '%' : '/' }}</span>

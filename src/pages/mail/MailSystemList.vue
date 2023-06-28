@@ -11,6 +11,7 @@ import MyNoData from 'components/mail/MyNoData.vue'
 import LineChart from 'components/chart/LineChart.vue'
 import HistogramChart from 'components/chart/HistogramChart.vue'
 import HeaderInformation from 'components/mail/HeaderInformation.vue'
+import FireSwitchLineChart from 'components/chart/FireSwitchLineChart.vue'
 // const props = defineProps({
 //   foo: {
 //     type: String,
@@ -19,6 +20,8 @@ import HeaderInformation from 'components/mail/HeaderInformation.vue'
 //   }
 // })
 // const emits = defineEmits(['change', 'delete'])
+
+// // 主机 tomcat nginx mysql
 interface ResourcesDataInterface {
   cpu: {
     total: string[],
@@ -62,6 +65,8 @@ interface NetworkDataInterface {
     retransSegs: string[]
   }
 }
+
+// f5
 interface F5FlowObjInterface {
   cpu: {
     total: string[]
@@ -77,6 +82,34 @@ interface F5FlowObjInterface {
     serverBytesOut: string[]
   }
 }
+
+// vpn
+interface VpnResourcesInterface {
+  cpu: {
+    total: string[]
+  },
+  user: {
+    total: string[]
+  }
+}
+
+// firewall
+interface FireResourcesInterface {
+  cpu: {
+    total: string[]
+  },
+  flow: {
+    // eslint-disable-next-line
+    flow_in: any[]
+    // eslint-disable-next-line
+    flow_out: any[]
+    // eslint-disable-next-line
+    packet_in: any[]
+    // eslint-disable-next-line
+    packet_out:any[]
+  }
+}
+
 interface WarningLineInterface {
   instance: string
   cpu_rate: number
@@ -93,7 +126,6 @@ interface LogInterface {
 const store = useStore()
 const route = useRoute()
 // const router = useRouter()
-console.log('route', route)
 // const tc = i18n.global.tc
 const routeInstance = route.query.instance as string
 const routeCategory = route.query.category as string
@@ -119,6 +151,10 @@ const unitQuery = ref({
   labelEn: 'host'
 })
 const isChange = ref('')
+const isShowHost = ref(false)
+const isShowFire = ref(false)
+const isShowF5 = ref(false)
+const isShowVpn = ref(false)
 const xAxis = ref<string[]>([])
 const categoryOptions = [
   {
@@ -162,6 +198,13 @@ const categoryOptions = [
     labelEn: 'MySQL'
   }
 ]
+const warningLineObj = ref<WarningLineInterface>({
+  instance: '',
+  cpu_rate: 0,
+  memory_used: 0,
+  disk_used: 0
+})
+// 主机 tomcat nginx mysql
 const resourcesChartData = ref<ResourcesDataInterface>({
   cpu: {
     total: [],
@@ -205,12 +248,8 @@ const networkChartData = ref<NetworkDataInterface>({
     retransSegs: []
   }
 })
-const warningLineObj = ref<WarningLineInterface>({
-  instance: '',
-  cpu_rate: 0,
-  memory_used: 0,
-  disk_used: 0
-})
+
+// 负载均衡
 const f5FlowObj = ref<F5FlowObjInterface>({
   cpu: {
     total: []
@@ -226,6 +265,30 @@ const f5FlowObj = ref<F5FlowObjInterface>({
     serverBytesOut: []
   }
 })
+
+// vpn
+const vpnResourcesChartData = ref<VpnResourcesInterface>({
+  cpu: {
+    total: []
+  },
+  user: {
+    total: []
+  }
+})
+
+// firewall switch
+const fireResourcesChartData = ref<FireResourcesInterface>({
+  cpu: {
+    total: []
+  },
+  flow: {
+    flow_in: [],
+    flow_out: [],
+    packet_in: [],
+    packet_out: []
+  }
+})
+
 // 主机 tomcat nginx mysql
 const cpuOption = computed(() => ({
   title: {
@@ -715,6 +778,7 @@ const flowOption = computed(() => ({
     }
   ]
 }))
+
 // 负载均衡
 const f5CpuOption = computed(() => ({
   title: {
@@ -851,6 +915,263 @@ const f5FlowOption = computed(() => ({
       }
     }
   ]
+}))
+
+// vpn
+const vpnCpuOption = computed(() => ({
+  title: {
+    text: 'CPU使用率',
+    textStyle: {
+      fontSize: 15
+    }
+  },
+  tooltip: {
+    trigger: 'axis'
+    // formatter: '类目值：{b0}<br/> {a0}:{c0}封 <br/>{a1}:{c1}个 <br/>{a2}:{c2}条'
+    // formatter: function (params: Record<string, any>) {
+    //   console.log(params)
+    // }
+  },
+  legend: {
+    top: 30
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: xAxis.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: [
+    {
+      name: 'CPU使用率',
+      type: 'line',
+      data: vpnResourcesChartData.value.cpu.total
+    }
+  ]
+}))
+const vpnUserOption = computed(() => ({
+  title: {
+    text: '指标情况',
+    textStyle: {
+      fontSize: 15
+    }
+  },
+  tooltip: {
+    trigger: 'axis'
+    // formatter: '类目值：{b0}<br/> {a0}:{c0}封 <br/>{a1}:{c1}个 <br/>{a2}:{c2}条'
+    // formatter: function (params: Record<string, any>) {
+    //   console.log(params)
+    // }
+  },
+  legend: {
+    top: 30
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: xAxis.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: [
+    {
+      name: '指标',
+      type: 'line',
+      data: vpnResourcesChartData.value.user.total
+    }
+  ]
+}))
+
+// firewall switch
+const fireCpuOption = computed(() => ({
+  title: {
+    text: 'CPU使用率',
+    textStyle: {
+      fontSize: 15
+    }
+  },
+  tooltip: {
+    trigger: 'axis'
+    // formatter: '类目值：{b0}<br/> {a0}:{c0}封 <br/>{a1}:{c1}个 <br/>{a2}:{c2}条'
+    // formatter: function (params: Record<string, any>) {
+    //   console.log(params)
+    // }
+  },
+  legend: {
+    top: 30
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: xAxis.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: [
+    {
+      name: 'CPU使用率',
+      type: 'line',
+      data: fireResourcesChartData.value.cpu.total
+    }
+  ]
+}))
+const fireFlowIn = computed(() => ({
+  title: {
+    text: '入流量情况图',
+    textStyle: {
+      fontSize: 15
+    }
+  },
+  tooltip: {
+    trigger: 'axis'
+    // formatter: '类目值：{b0}<br/> {a0}:{c0}封 <br/>{a1}:{c1}个 <br/>{a2}:{c2}条'
+    // formatter: function (params: Record<string, any>) {
+    //   console.log(params)
+    // }
+  },
+  legend: {
+    top: 30,
+    type: 'scroll'
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: xAxis.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: fireResourcesChartData.value.flow.flow_in
+}))
+const fireFlowOut = computed(() => ({
+  title: {
+    text: '出流量情况图',
+    textStyle: {
+      fontSize: 15
+    }
+  },
+  tooltip: {
+    trigger: 'axis'
+    // formatter: '类目值：{b0}<br/> {a0}:{c0}封 <br/>{a1}:{c1}个 <br/>{a2}:{c2}条'
+    // formatter: function (params: Record<string, any>) {
+    //   console.log(params)
+    // }
+  },
+  legend: {
+    top: 30,
+    type: 'scroll'
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: xAxis.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: fireResourcesChartData.value.flow.flow_out
+}))
+const firePacketIn = computed(() => ({
+  title: {
+    text: '入包情况图',
+    textStyle: {
+      fontSize: 15
+    }
+  },
+  tooltip: {
+    trigger: 'axis'
+    // formatter: '类目值：{b0}<br/> {a0}:{c0}封 <br/>{a1}:{c1}个 <br/>{a2}:{c2}条'
+    // formatter: function (params: Record<string, any>) {
+    //   console.log(params)
+    // }
+  },
+  legend: {
+    top: 30,
+    type: 'scroll'
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: xAxis.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: fireResourcesChartData.value.flow.packet_in
+}))
+const firePacketOut = computed(() => ({
+  title: {
+    text: '出包情况图',
+    textStyle: {
+      fontSize: 15
+    }
+  },
+  tooltip: {
+    trigger: 'axis'
+    // formatter: '类目值：{b0}<br/> {a0}:{c0}封 <br/>{a1}:{c1}个 <br/>{a2}:{c2}条'
+    // formatter: function (params: Record<string, any>) {
+    //   console.log(params)
+    // }
+  },
+  legend: {
+    top: 30,
+    type: 'scroll'
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: xAxis.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: fireResourcesChartData.value.flow.packet_out
 }))
 
 const logColumns = [
@@ -994,11 +1315,33 @@ const getWarnLine = (instance: string) => {
   })
 }
 const getDetail = async (instance: string) => {
+  if (unitQuery.value.value === 'host' || unitQuery.value.value === 'tomcat' || unitQuery.value.value === 'nginx' || unitQuery.value.value === 'mysql') {
+    isShowHost.value = true
+    isShowFire.value = false
+    isShowF5.value = false
+    isShowVpn.value = false
+  } else if (unitQuery.value.value === 'switch' || unitQuery.value.value === 'firewall') {
+    isShowFire.value = true
+    isShowHost.value = false
+    isShowF5.value = false
+    isShowVpn.value = false
+  } else if (unitQuery.value.value === 'f5') {
+    isShowF5.value = true
+    isShowHost.value = false
+    isShowFire.value = false
+    isShowVpn.value = false
+  } else {
+    isShowVpn.value = true
+    isShowHost.value = false
+    isShowFire.value = false
+    isShowF5.value = false
+  }
   isChange.value = unitQuery.value.value
   active.value = instance
   unitInstance = instance
   cardInfo.value = {}
   xAxis.value = []
+  // // 主机 tomcat nginx mysql
   resourcesChartData.value.cpu.total = []
   resourcesChartData.value.cpu.user = []
   resourcesChartData.value.cpu.disk = []
@@ -1022,12 +1365,25 @@ const getDetail = async (instance: string) => {
   networkChartData.value.socket.inSegs = []
   networkChartData.value.socket.outSegs = []
   networkChartData.value.socket.retransSegs = []
+
+  // f5
   f5FlowObj.value.flow.clientBytesIn = []
   f5FlowObj.value.flow.clientBytesOut = []
   f5FlowObj.value.flow.serverBytesIn = []
   f5FlowObj.value.flow.serverBytesOut = []
   f5FlowObj.value.mem.tmm = []
   f5FlowObj.value.mem.host = []
+
+  // vpn
+  vpnResourcesChartData.value.cpu.total = []
+  vpnResourcesChartData.value.user.total = []
+
+  // firewall switch
+  fireResourcesChartData.value.cpu.total = []
+  fireResourcesChartData.value.flow.flow_in = []
+  fireResourcesChartData.value.flow.flow_out = []
+  fireResourcesChartData.value.flow.packet_in = []
+  fireResourcesChartData.value.flow.packet_out = []
   // await aiops.mail.getMailMetricField({
   //   query: {
   //     instance
@@ -1040,68 +1396,123 @@ const getDetail = async (instance: string) => {
       instance
     }
   })
-  const dataArr = Object.keys(metricRes.data.results)
-  if (dataArr.length > 0) {
-    cardInfo.value = metricRes.data.results[dataArr[dataArr.length - 1]]
+  // const dataArr = Object.keys(metricRes.data.results)
+  if (metricRes.data.results.length > 0) {
+    // cardInfo.value = metricRes.data.results[dataArr[dataArr.length - 1]]
+    cardInfo.value = metricRes.data.results[metricRes.data.results.length - 1]
     if (unitQuery.value.value === 'host' || unitQuery.value.value === 'tomcat' || unitQuery.value.value === 'nginx' || unitQuery.value.value === 'mysql') {
-      dataArr.forEach((item) => {
+      metricRes.data.results.forEach((item) => {
         let totalSize = 0
         let availSize = 0
-        xAxis.value.push(date.formatDate(Number(metricRes.data.results[item].timestamp) * 1000, 'HH:mm'))
-        resourcesChartData.value.cpu.total.push(Number(metricRes.data.results[item].cpu_rate).toFixed(2))
-        resourcesChartData.value.cpu.user.push(Number(metricRes.data.results[item].cpu_user_rate).toFixed(2))
-        resourcesChartData.value.cpu.disk.push(Number(metricRes.data.results[item].cpu_iowait_rate).toFixed(2))
-        resourcesChartData.value.cpu.sys.push(Number(metricRes.data.results[item].cpu_system_rate).toFixed(2))
-        resourcesChartData.value.mem.total.push((Number(metricRes.data.results[item].memory_total) / 1024 / 1024 / 1024).toFixed(2))
-        resourcesChartData.value.mem.use.push((Number(metricRes.data.results[item].memory_free) / 1024 / 1024 / 1024).toFixed(2))
-        performanceChartData.value.load.one.push(metricRes.data.results[item].node_load1)
-        performanceChartData.value.load.five.push(metricRes.data.results[item].node_load5)
-        performanceChartData.value.load.fifteen.push(metricRes.data.results[item].node_load15)
-        networkChartData.value.bandwidth.upload.push((Number(metricRes.data.results[item].network_transmit) / 1024 / 1024).toFixed(2))
-        networkChartData.value.bandwidth.download.push((Number(metricRes.data.results[item].network_receive) / 1024 / 1024).toFixed(2))
-        networkChartData.value.flow.upload.push((Number(metricRes.data.results[item].netflow_transmit) / 1024 / 1024).toFixed(2))
-        networkChartData.value.flow.download.push((Number(metricRes.data.results[item].netflow_receive) / 1024 / 1024).toFixed(2))
-        networkChartData.value.socket.currEstab.push(Number(metricRes.data.results[item].socket_CurrEstab).toFixed(2))
-        networkChartData.value.socket.tw.push(Number(metricRes.data.results[item].socket_TCP_tw).toFixed(2))
-        networkChartData.value.socket.used.push(Number(metricRes.data.results[item].socket_Sockets_used).toFixed(2))
-        networkChartData.value.socket.inuse.push(Number(metricRes.data.results[item].socket_UDP_inuse).toFixed(2))
-        networkChartData.value.socket.alloc.push(Number(metricRes.data.results[item].socket_TCP_alloc).toFixed(2))
-        networkChartData.value.socket.inSegs.push(Number(metricRes.data.results[item].socket_Tcp_InSegs).toFixed(2))
-        networkChartData.value.socket.outSegs.push(Number(metricRes.data.results[item].socket_Tcp_OutSegs).toFixed(2))
-        networkChartData.value.socket.retransSegs.push(Number(metricRes.data.results[item].socket_Tcp_RetransSegs).toFixed(2))
-        if (metricRes.data.results[item].filesystem_size) {
-          metricRes.data.results[item].filesystem_size.forEach((size) => {
+        xAxis.value.push(date.formatDate(Number(item.timestamp) * 1000, 'HH:mm'))
+        resourcesChartData.value.cpu.total.push(Number(item.cpu_rate).toFixed(2))
+        resourcesChartData.value.cpu.user.push(Number(item.cpu_user_rate).toFixed(2))
+        resourcesChartData.value.cpu.disk.push(Number(item.cpu_iowait_rate).toFixed(2))
+        resourcesChartData.value.cpu.sys.push(Number(item.cpu_system_rate).toFixed(2))
+        resourcesChartData.value.mem.total.push((Number(item.memory_total) / 1024 / 1024 / 1024).toFixed(2))
+        resourcesChartData.value.mem.use.push((Number(item.memory_free) / 1024 / 1024 / 1024).toFixed(2))
+        performanceChartData.value.load.one.push(item.node_load1)
+        performanceChartData.value.load.five.push(item.node_load5)
+        performanceChartData.value.load.fifteen.push(item.node_load15)
+        networkChartData.value.bandwidth.upload.push((Number(item.network_transmit) / 1024 / 1024).toFixed(2))
+        networkChartData.value.bandwidth.download.push((Number(item.network_receive) / 1024 / 1024).toFixed(2))
+        networkChartData.value.flow.upload.push((Number(item.netflow_transmit) / 1024 / 1024).toFixed(2))
+        networkChartData.value.flow.download.push((Number(item.netflow_receive) / 1024 / 1024).toFixed(2))
+        networkChartData.value.socket.currEstab.push(Number(item.socket_CurrEstab).toFixed(2))
+        networkChartData.value.socket.tw.push(Number(item.socket_TCP_tw).toFixed(2))
+        networkChartData.value.socket.used.push(Number(item.socket_Sockets_used).toFixed(2))
+        networkChartData.value.socket.inuse.push(Number(item.socket_UDP_inuse).toFixed(2))
+        networkChartData.value.socket.alloc.push(Number(item.socket_TCP_alloc).toFixed(2))
+        networkChartData.value.socket.inSegs.push(Number(item.socket_Tcp_InSegs).toFixed(2))
+        networkChartData.value.socket.outSegs.push(Number(item.socket_Tcp_OutSegs).toFixed(2))
+        networkChartData.value.socket.retransSegs.push(Number(item.socket_Tcp_RetransSegs).toFixed(2))
+        if (item.filesystem_size) {
+          item.filesystem_size.forEach((size) => {
             totalSize += Number(size.filesystem_size)
           })
         }
-        if (metricRes.data.results[item].filesystem_avail) {
-          metricRes.data.results[item].filesystem_avail.forEach((size) => {
+        if (item.filesystem_avail) {
+          item.filesystem_avail.forEach((size) => {
             availSize += Number(size.filesystem_avail)
           })
         }
         resourcesChartData.value.disk.use.push((availSize / 1024 / 1024 / 1024).toFixed(2))
         resourcesChartData.value.disk.total.push((totalSize / 1024 / 1024 / 1024).toFixed(2))
+        getWarnLine(instance)
       })
     } else if (unitQuery.value.value === 'f5') {
-      dataArr.forEach((item) => {
-        xAxis.value.push(date.formatDate(Number(item) * 1000, 'HH:mm'))
-        f5FlowObj.value.cpu.total.push(Number(metricRes.data.results[item].cpu_rate).toFixed(2))
-        f5FlowObj.value.mem.tmm.push(Number((metricRes.data.results[item].memory_tmm) / 1024 / 1024 / 1024).toFixed(2))
-        f5FlowObj.value.mem.host.push(Number((metricRes.data.results[item].memory_host) / 1024 / 1024 / 1024).toFixed(2))
-        f5FlowObj.value.flow.clientBytesIn.push(Number(metricRes.data.results[item].sysStatClientBytesIn).toFixed(2))
-        f5FlowObj.value.flow.clientBytesOut.push(Number(metricRes.data.results[item].sysStatClientBytesOut).toFixed(2))
-        f5FlowObj.value.flow.serverBytesIn.push(Number(metricRes.data.results[item].sysStatServerBytesIn).toFixed(2))
-        f5FlowObj.value.flow.serverBytesOut.push(Number(metricRes.data.results[item].sysStatServerBytesOut).toFixed(2))
+      metricRes.data.results.forEach((item) => {
+        xAxis.value.push(date.formatDate(Number(item.timestamp) * 1000, 'HH:mm'))
+        f5FlowObj.value.cpu.total.push(Number(item.cpu_rate).toFixed(2))
+        f5FlowObj.value.mem.tmm.push(Number((item.memory_tmm) / 1024 / 1024 / 1024).toFixed(2))
+        f5FlowObj.value.mem.host.push(Number((item.memory_host) / 1024 / 1024 / 1024).toFixed(2))
+        f5FlowObj.value.flow.clientBytesIn.push(Number(item.sysStatClientBytesIn).toFixed(2))
+        f5FlowObj.value.flow.clientBytesOut.push(Number(item.sysStatClientBytesOut).toFixed(2))
+        f5FlowObj.value.flow.serverBytesIn.push(Number(item.sysStatServerBytesIn).toFixed(2))
+        f5FlowObj.value.flow.serverBytesOut.push(Number(item.sysStatServerBytesOut).toFixed(2))
       })
-    } else {
-      dataArr.forEach((item) => {
-        xAxis.value.push(date.formatDate(Number(item) * 1000, 'HH:mm'))
-        resourcesChartData.value.cpu.total.push(Number(metricRes.data.results[item].cpu_rate).toFixed(2))
+    } else if (unitQuery.value.value === 'vpn') {
+      metricRes.data.results.forEach((item) => {
+        xAxis.value.push(date.formatDate(Number(item.timestamp) * 1000, 'HH:mm'))
+        vpnResourcesChartData.value.cpu.total.push(Number(item.cpu_rate).toFixed(2))
+        vpnResourcesChartData.value.user.total.push(item.user_in)
       })
+    } else if (unitQuery.value.value === 'firewall' || unitQuery.value.value === 'switch') {
+      metricRes.data.results.forEach((item) => {
+        xAxis.value.push(date.formatDate(Number(item.timestamp) * 1000, 'HH:mm'))
+        fireResourcesChartData.value.cpu.total.push(Number(item.cpu_rate).toFixed(2))
+      })
+      for (let i = 0; i < metricRes.data.results[0].flow_in.length; i++) {
+        // eslint-disable-next-line
+        const flowInSeriesObj: any = {
+          name: metricRes.data.results[0].flow_in[i].ifName,
+          type: 'line',
+          data: []
+        }
+        metricRes.data.results.forEach((item) => {
+          flowInSeriesObj.data.push((Number(item.flow_in[i].flow_in) / 1024 / 1024).toFixed(2))
+        })
+        fireResourcesChartData.value.flow.flow_in.push(flowInSeriesObj)
+      }
+      for (let i = 0; i < metricRes.data.results[0].flow_out.length; i++) {
+        // eslint-disable-next-line
+        const flowOutSeriesObj: any = {
+          name: metricRes.data.results[0].flow_out[i].ifName,
+          type: 'line',
+          data: []
+        }
+        metricRes.data.results.forEach((item) => {
+          flowOutSeriesObj.data.push((Number(item.flow_out[i].flow_out) / 1024 / 1024).toFixed(2))
+        })
+        fireResourcesChartData.value.flow.flow_out.push(flowOutSeriesObj)
+      }
+      for (let i = 0; i < metricRes.data.results[0].packet_in.length; i++) {
+        // eslint-disable-next-line
+        const packInSeriesObj: any = {
+          name: metricRes.data.results[0].packet_in[i].ifName,
+          type: 'line',
+          data: []
+        }
+        metricRes.data.results.forEach((item) => {
+          packInSeriesObj.data.push((Number(item.packet_in[i].packet_in) / 1024 / 1024).toFixed(2))
+        })
+        fireResourcesChartData.value.flow.packet_in.push(packInSeriesObj)
+      }
+      for (let i = 0; i < metricRes.data.results[0].packet_out.length; i++) {
+        // eslint-disable-next-line
+        const packOutSeriesObj: any = {
+          name: metricRes.data.results[0].packet_out[i].ifName,
+          type: 'line',
+          data: []
+        }
+        metricRes.data.results.forEach((item) => {
+          packOutSeriesObj.data.push((Number(item.packet_out[i].packet_out) / 1024 / 1024).toFixed(2))
+        })
+        fireResourcesChartData.value.flow.packet_out.push(packOutSeriesObj)
+      }
     }
-    isRight.value = true
   }
-  getWarnLine(instance)
+  isRight.value = true
 }
 const currentPage = ref(1)
 const logCount = ref(0)
@@ -1124,9 +1535,11 @@ onBeforeMount(async () => {
     unitQuery.value = categoryOptions.find((category) => category.value === routeCategory)
     startTime.value = date.formatDate(Number(routeStart) * 1000, 'YYYY-MM-DD HH:mm')
     endTime.value = date.formatDate(Number(routeEnd) * 1000, 'YYYY-MM-DD HH:mm')
+    await getUnitList(unitQuery.value)
+    await getDetail(routeInstance)
+  } else {
+    await getUnitList(unitQuery.value)
   }
-  await getUnitList(unitQuery.value)
-  await getDetail(routeInstance)
 })
 $bus.on('warn', async (value: boolean) => {
   if (value) {
@@ -1265,7 +1678,7 @@ onBeforeUnmount(() => {
                     label="资源"
                   >
                   <q-separator/>
-                    <q-card v-if="unitQuery.value === 'host' || unitQuery.value === 'tomcat' || unitQuery.value === 'nginx' || unitQuery.value === 'mysql'">
+                    <q-card v-if="isShowHost">
                       <q-card-section class="row">
                         <div class="col-6">
                           <line-chart :option="cpuOption"/>
@@ -1278,7 +1691,14 @@ onBeforeUnmount(() => {
                         </div>
                       </q-card-section>
                     </q-card>
-                  <q-card v-if="unitQuery.value === 'f5'">
+                  <q-card v-if="isShowFire">
+                    <q-card-section class="row">
+                      <div class="col-6">
+                        <line-chart :option="fireCpuOption"/>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                  <q-card v-if="isShowF5">
                     <q-card-section class="row">
                       <div class="col">
                         <line-chart :option="f5CpuOption"/>
@@ -1288,16 +1708,19 @@ onBeforeUnmount(() => {
                       </div>
                     </q-card-section>
                   </q-card>
-                  <q-card v-if="unitQuery.value === 'vpn' || unitQuery.value === 'firewall' || unitQuery.value === 'switch'">
+                  <q-card v-if="isShowVpn">
                     <q-card-section class="row">
-                      <div class="col-6">
-                        <line-chart :option="f5CpuOption"/>
+                      <div class="col">
+                        <line-chart :option="vpnCpuOption"/>
+                      </div>
+                      <div class="col">
+                        <line-chart :option="vpnUserOption"/>
                       </div>
                     </q-card-section>
                   </q-card>
                   </q-expansion-item>
                 <q-expansion-item
-                    v-if="unitQuery.value === 'host' || unitQuery.value === 'tomcat' || unitQuery.value === 'nginx' || unitQuery.value === 'mysql'"
+                    v-if="isShowHost"
                     switch-toggle-side
                     expand-separator
                     default-opened
@@ -1313,13 +1736,14 @@ onBeforeUnmount(() => {
                     </q-card>
                   </q-expansion-item>
                 <q-expansion-item
+                  v-if="!isShowVpn"
                     switch-toggle-side
                     expand-separator
                     default-opened
                     label="网络"
                   >
                   <q-separator/>
-                    <q-card v-if="unitQuery.value === 'host' || unitQuery.value === 'tomcat' || unitQuery.value === 'nginx' || unitQuery.value === 'mysql'">
+                    <q-card v-if="isShowHost">
                       <q-card-section class="row">
                         <div class="col-6">
                           <line-chart :option="bandwidthOption"/>
@@ -1332,7 +1756,29 @@ onBeforeUnmount(() => {
                         </div>
                       </q-card-section>
                     </q-card>
-                  <q-card v-if="unitQuery.value === 'f5'">
+                  <q-card v-if="isShowFire">
+                    <q-card-section class="row">
+                      <div class="col">
+                        <fire-switch-line-chart :option="fireFlowIn"/>
+                      </div>
+                    </q-card-section>
+                    <q-card-section class="row">
+                      <div class="col">
+                        <fire-switch-line-chart :option="fireFlowOut"/>
+                      </div>
+                    </q-card-section>
+                    <q-card-section class="row">
+                      <div class="col">
+                        <fire-switch-line-chart :option="firePacketIn"/>
+                      </div>
+                    </q-card-section>
+                    <q-card-section class="row">
+                      <div class="col">
+                        <fire-switch-line-chart :option="firePacketOut"/>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                  <q-card v-if="isShowF5">
                     <q-card-section class="row">
                       <div class="col-6">
                         <line-chart :option="f5FlowOption"/>
