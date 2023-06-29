@@ -1,8 +1,32 @@
 // 更新日志内容，版本降序排列
 export const logs = [
   {
+    version: 'v0.2.3',
+    date: '2023-06-29',
+    time: '17:13:35',
+    release_author: 'duyukuan',
+    updates: [
+      {
+        info: '中国科技网模块全局页面引入G6大规模图下钻式探索样例并跑通',
+        commit_author: 'duyukuan'
+      },
+      {
+        info: '网站现有逻辑debug',
+        commit_author: '郑玮蓁'
+      },
+      {
+        info: '网站群高级检索内联逻辑代码编写',
+        commit_author: '郑玮蓁'
+      },
+      {
+        info: '网站群可访问性页表格逻辑修改',
+        commit_author: '郑玮蓁'
+      }
+    ]
+  },
+  {
     version: 'v0.2.2',
-    date: '2023-06-27',
+    date: '2023-06-28',
     time: '17:15:15',
     release_author: 'duyukuan',
     updates: [

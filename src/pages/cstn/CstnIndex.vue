@@ -46,7 +46,7 @@ const changeTab = (name: string) => {
       </q-tabs>
     </div>
     <q-separator/>
-    <div class="row q-pt-xl q-px-md">
+    <div class="q-mt-xs">
       <router-view :key="$route.fullPath"/>
     </div>
     <div>
