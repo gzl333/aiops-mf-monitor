@@ -35,11 +35,11 @@ const routes: RouteRecordRaw[] = [
         children: [
           {
             path: 'overall',
-            component: () => import('pages/web/overall/WebOverall.vue')
+            component: () => import('pages/web/overall/WebOverall_test.vue')
           },
           {
             path: 'accessibility',
-            component: () => import('pages/web/accessibility/WebAccessibility.vue')
+            component: () => import('pages/web/accessibility/WebAccessibility_test.vue')
           },
           {
             path: 'tamper',
@@ -82,14 +82,6 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'about',
         component: () => import('pages/AboutPage.vue')
-      },
-      {
-        path: 'overall_test',
-        component: () => import('pages/web_test/WebOverall_test.vue')
-      },
-      {
-        path: 'accessibility_test',
-        component: () => import('pages/web_test/WebAccessibility_test.vue')
       }
     ]
   },

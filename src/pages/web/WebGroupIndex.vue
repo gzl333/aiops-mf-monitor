@@ -53,13 +53,6 @@ const changeTab = (name: string) => {
                 </q-tab>
               </q-tabs>
             </div>
-            <div class="col-1">
-              <q-btn
-                style="float: right;transform: translate(0, 65%);padding: 16px;border-radius: 28px;min-height: 56px;min-width: 56px;"
-                no-caps no-wrap rounded color="primary" icon="add" @click="navigateToUrl('/my/monitor/web/create')">
-                {{ tc('新建') }}
-              </q-btn>
-            </div>
           </div>
         </div>
       </div>

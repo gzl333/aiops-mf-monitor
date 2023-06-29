@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 // import { navigateToUrl } from 'single-spa'
 // import { useStore } from 'stores/store'
 // import { useRoute, useRouter } from 'vue-router'
@@ -7,7 +7,7 @@ import { ref, computed } from 'vue'
 import PieChart from 'components/chart/PieChart.vue'
 import HistogramChart from 'components/chart/HistogramChart.vue'
 // import { navigateToUrl } from 'single-spa'
-// import { date } from 'quasar'
+import { date } from 'quasar'
 import aiops from 'src/api/aiops'
 import LineChart from 'components/chart/LineChart.vue'
 import { navigateToUrl } from 'single-spa'
@@ -136,6 +136,14 @@ const tc = i18n.global.tc
 // ]
 const series_ref = ref<delay_distribution_series[]>([])
 const runtime_ref = ref<runtime_mission_list[]>([])
+const typeselect = ref('探针1')
+const options = [
+  '探针1', '探针2'
+]
+const pagination = ref({
+  page: 1,
+  rowsPerPage: 20
+})
 
 const columns = [
   {
@@ -170,8 +178,9 @@ const rows = [
     mission_name: 356
   }
 ]
-const date2 = ref('2019-02-01 12:44')
-// const date1 = ref('2019-02-01 12:44')
+const date2 = ref(date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm'))
+const date1 = ref(date.formatDate(Date.now() - 300, 'YYYY-MM-DD HH:mm'))
+// console.log(date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm'))
 // const model = ref(null)
 // const options = [
 //   '探针1', '探针2'
@@ -194,7 +203,7 @@ const date2 = ref('2019-02-01 12:44')
 const cpuOption = computed(() => ({
   color: ['#80FFA5', '#00DDFF', '#37A2FF', '#FF0087', '#FFBF00'],
   title: {
-    text: '24小时状态分布图'
+    text: '12小时状态分布图'
   },
   tooltip: {
     trigger: 'axis',
@@ -223,7 +232,7 @@ const cpuOption = computed(() => ({
     {
       type: 'category',
       boundaryGap: false,
-      data: ['-24', '-23', '-22', '-21', '-20', '-19', '-18', '-17', '-16', '-15', '-14', '-13', '-12', '-11`', '-10', '-9', '-8', '-7', '-6', '-5', '-4', '-3', '-2', '-1']
+      data: ['-12', '-11`', '-10', '-9', '-8', '-7', '-6', '-5', '-4', '-3', '-2', '-1']
     }
   ],
   yAxis: [
@@ -292,7 +301,17 @@ const hour_rate_data_1 = ref<number[]>([])
 const hour_rate_data_2 = ref<number[]>([])
 const hour_rate_data_3 = ref<number[]>([])
 const getStatusHourRate = () => {
-  aiops.monitor.getStatusHourRate({ query: { probe_id: 1 } }).then((res) => {
+  hour_rate_data_1.value = []
+  hour_rate_data_2.value = []
+  hour_rate_data_3.value = []
+  const probeType = typeselect.value
+  const probeid = ref(1)
+  if (probeType === '探针1' || probeType === null) {
+    probeid.value = 1
+  } else {
+    probeid.value = 2
+  }
+  aiops.monitor.getStatusHourRate({ query: { probe_id: probeid.value } }).then((res) => {
     const single_hour_rate_1: number[] = []
     const single_hour_rate_2: number[] = []
     const single_hour_rate_3: number[] = []
@@ -324,7 +343,10 @@ const getStatusOverview = () => {
   })
 }
 const getDelayDistribution = () => {
-  aiops.monitor.getDelayDistribution().then((res) => {
+  const start_time = date.formatDate(date1.value, 'X')
+  const end_time = date.formatDate(date2.value, 'X')
+  const tmp_series_ref = ref<delay_distribution_series[]>([])
+  aiops.monitor.getDelayDistribution({ query: { start: start_time, end: end_time } }).then((res) => {
     for (const resKey in res.data) {
       // const single_bar: type= new Map()
       // console.log(resKey)
@@ -346,13 +368,52 @@ const getDelayDistribution = () => {
       // single_bar.set('data', bar_data)
       single_bar.data = bar_data.reverse()
       // console.log(bar_data)
-      series_ref.value.push(single_bar)
+      tmp_series_ref.value.push(single_bar)
     }
   })
   // console.log(res)
   // console.log(series_ref.value)
+  series_ref.value = tmp_series_ref.value
 }
-
+watch(date1, (newValue, oldValue) => {
+  // const bigger_time = date.formatDate(date2.value, 'X')
+  console.log(oldValue)
+  const unit = 'seconds'
+  const now = date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm')
+  let diff = date.getDateDiff(newValue, now, unit)
+  if (diff > 0) {
+    date1.value = oldValue
+    alert('time should not bigger than now!')
+  }
+  diff = date.getDateDiff(date2.value, newValue, unit)
+  if (diff < 0) {
+    date1.value = oldValue
+    alert('start time should not biggger than end time!')
+  }
+  if (date1.value !== oldValue) getDelayDistribution()
+  // console.log(bigger_time)
+  // console.log(newValue)
+  // console.log(diff)
+})
+watch(date2, async (newValue, oldValue) => {
+  // const bigger_time = date.formatDate(date2.value, 'X')
+  const unit = 'seconds'
+  const now = date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm')
+  let diff = date.getDateDiff(newValue, now, unit)
+  if (diff > 0) {
+    date2.value = oldValue
+    alert('time should not bigger than now!')
+  }
+  diff = date.getDateDiff(date1.value, newValue, unit)
+  if (diff > 0) {
+    date2.value = oldValue
+    alert('end time should not be smaller than start time!')
+  }
+  if (date2.value !== oldValue) getDelayDistribution()
+  // console.log(bigger_time)
+  // console.log(newValue)
+  // console.log(diff)
+})
 getStatusHourRate()
 getDelayDistribution()
 getStatusOverview()
@@ -366,7 +427,13 @@ function compareStatus (a, b) {
   if (a === '高延迟') return -1
   if (b === '高延迟') return 1
 }
+function compareStatus1 (a, b) {
+  if (a > b) return 1
+  if (a === b) return 0
+  if (a < b) return -1
+}
 const getStatusRate = () => {
+  runtime_ref.value = []
   aiops.monitor.getStatusRate({ query: { probe_id: 1 } }).then((res1) => {
     for (const res1Key in res1.data) {
       const single_data: runtime_mission_list = {
@@ -381,7 +448,11 @@ const getStatusRate = () => {
       single_data.mission_name = 'test'
       single_data.mission_url = res1.data[res1Key].url
       single_data.mission_status = res1.data[res1Key].状态
-      single_data.mission_delay = res1.data[res1Key].耗时.substring(0, res1.data[res1Key].耗时.length - 2)
+      if (single_data.mission_status === '异常') {
+        single_data.mission_delay = res1.data[res1Key].耗时.substring(0, res1.data[res1Key].耗时.length - 2) * -1
+      } else {
+        single_data.mission_delay = res1.data[res1Key].耗时.substring(0, res1.data[res1Key].耗时.length - 2) * 1
+      }
       single_data.probe = '1'
       single_data.detail = '查看详情'
       runtime_ref.value.push(single_data)
@@ -401,9 +472,14 @@ const getStatusRate = () => {
       single_data.mission_name = 'test'
       single_data.mission_url = res2.data[res2Key].url
       single_data.mission_status = res2.data[res2Key].状态
-      single_data.mission_delay = res2.data[res2Key].耗时.substring(0, res2.data[res2Key].耗时.length - 2)
+      if (single_data.mission_status === '异常') {
+        single_data.mission_delay = res2.data[res2Key].耗时.substring(0, res2.data[res2Key].耗时.length - 2) * -1
+      } else {
+        single_data.mission_delay = res2.data[res2Key].耗时.substring(0, res2.data[res2Key].耗时.length - 2) * 1
+      }
       single_data.probe = '2'
       single_data.detail = '查看详情'
+      console.log(single_data)
       runtime_ref.value.push(single_data)
     }
   })
@@ -411,21 +487,11 @@ const getStatusRate = () => {
 }
 getStatusRate()
 const runtime_columns = [
-  {
-    name: 'name',
-    required: true,
-    label: '',
-    align: 'left',
-    field: row => row.name,
-    format: val => `${val}`,
-    sortable: true
-  },
   { name: 'mission_name', align: 'center', label: '任务名称', field: 'mission_name', sortable: true },
-  { name: 'mission_url', label: '任务链接', field: 'mission_url', sortable: true },
-  { name: 'mission_status', label: '任务状态', field: 'mission_status', sortable: true, sort: (a, b) => compareStatus(a, b) },
-  { name: 'mission_delay', label: '任务延时(ms)', field: 'mission_delay', sortable: true },
-  { name: 'probe', label: '探测节点', field: 'probe', sortable: true },
-  { name: 'detail', label: '', field: 'detail' }
+  { name: 'mission_url', align: 'center', label: '任务链接', field: 'mission_url', sortable: true },
+  { name: 'mission_status', align: 'center', label: '任务状态', field: 'mission_status', sortable: true, sort: (a, b) => compareStatus(a, b) },
+  { name: 'mission_delay', align: 'center', label: '任务延时(ms)', field: 'mission_delay', sortable: true, sort: (a, b) => compareStatus1(a, b) },
+  { name: 'probe', align: 'center', label: '探测节点', field: 'probe', sortable: true }
 ]
 const runtime_rows = runtime_ref
 
@@ -461,11 +527,11 @@ const runtime_rows = runtime_ref
             </div>
             <div class="col-7">
               <div class="row items-center justify-end">
-                <q-input class="q-mr-md" filled dense v-model="date2">
+                <q-input class="q-mr-md" filled dense v-model="date1">
                   <template v-slot:prepend>
                     <q-icon name="event" class="cursor-pointer">
                       <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-date v-model="date2" mask="YYYY-MM-DD HH:mm">
+                        <q-date v-model="date1" mask="YYYY-MM-DD HH:mm">
                           <div class="row items-center justify-end">
                             <q-btn v-close-popup label="Close" color="primary" flat />
                           </div>
@@ -477,7 +543,7 @@ const runtime_rows = runtime_ref
                   <template v-slot:append>
                     <q-icon name="access_time" class="cursor-pointer">
                       <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-time v-model="date2" mask="YYYY-MM-DD HH:mm" format24h>
+                        <q-time v-model="date1" mask="YYYY-MM-DD HH:mm" format24h>
                           <div class="row items-center justify-end">
                             <q-btn v-close-popup label="Close" color="primary" flat />
                           </div>
@@ -519,7 +585,9 @@ const runtime_rows = runtime_ref
             </div>
           </div>
           <div class="row">
-              <line-chart :option="cpuOption"/>
+            <q-select outlined dense v-model="typeselect" :options="options" label="请选择" class="col-3"
+                      @update:model-value="getStatusHourRate"/>
+            <line-chart :option="cpuOption"/>
           </div>
           <div class="row">
             <q-table
@@ -533,24 +601,22 @@ const runtime_rows = runtime_ref
               :no-data-label="tc('noData')"
               :columns="runtime_columns"
               row-key="name"
+              v-model:pagination=pagination
             >
               <template v-slot:body="props">
                 <q-tr :props="props">
-                  <q-td key="name" :props="props" class="no-padding">
-                    <q-btn no-caps flat color="primary" :label="tc('查看详情')" @click="navigateToUrl(`/my/monitor/web/detail/${props.row.id}`)"/>
-                    <span>{{ props.row.id }}</span>
-                  </q-td>
                   <q-td key="mission_name" :props="props" class="no-padding">
+                    <q-btn no-caps flat color="primary" :label="tc('查看详情')" @click="navigateToUrl(`/my/monitor/web/detail/${props.row.id}`)"/>
                     {{ props.row.mission_name }}
                   </q-td>
                   <q-td key="mission_url" :props="props" class="no-padding">
                     {{ props.row.mission_url }}
                   </q-td>
-                  <q-td key="mission_status" :props="props" class="no-padding">
+                  <q-td key="mission_status" :props="props" :class="props.row.mission_status === '异常' ? 'text-negative' : props.row.mission_status === '流畅' ? 'text-positive' : 'text-warning'">
                     {{ props.row.mission_status }}
                   </q-td>
-                  <q-td key="mission_delay" :props="props" class="no-padding">
-                    {{ props.row.mission_delay }}
+                  <q-td key="mission_delay" :props="props">
+                    {{ props.row.mission_status !== '异常' ? props.row.mission_delay : props.row.mission_delay * -1 }}
                   </q-td>
                   <q-td key="probe" :props="props" class="no-padding">
                     探针{{ props.row.probe }}

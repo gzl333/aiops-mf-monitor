@@ -12,9 +12,11 @@ import aiops from 'src/api/aiops'
 interface distributionData {
   value: number
   name: string
+  // color: string
 }
 
-const date1 = ref('2019-02-01 12:44')
+const date2 = ref(date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm'))
+const date1 = ref(date.formatDate(Date.now() - 300, 'YYYY-MM-DD HH:mm'))
 const standard = ref({
   min: 0,
   max: 500
@@ -143,6 +145,7 @@ const type_list: string[] = ['异常', '高延迟', '流畅']
 $bus.on('mission_select', msg => {
   // console.log(msg.name)
   expanded.value = true
+  model_option_search.value = typeselect.value
   if (type_list.includes(msg.name)) {
     // 是类型分支
     // console.log(`${a} is in the list`);
@@ -179,6 +182,8 @@ $bus.on('mission_select', msg => {
 const distributionTypeData = ref<distributionData[]>([])
 const distributionDelayData = ref<distributionData[]>([])
 const getDistribution = () => {
+  distributionTypeData.value = []
+  distributionDelayData.value = []
   const probeid = ref(1)
   if (typeselect.value === '探针1') {
     probeid.value = 1
@@ -191,7 +196,6 @@ const getDistribution = () => {
         value: 0,
         name: ''
       }
-
       single_distribution_type_data.name = status
       single_distribution_type_data.value = res.data.status[status]
       distributionTypeData.value.push(single_distribution_type_data)
@@ -208,6 +212,67 @@ const getDistribution = () => {
     }
   })
 }
+const funTmp = () => {
+  console.log('waiting for api')
+  const probeid = ref(1)
+  if (typeselect.value === '探针1') {
+    probeid.value = 1
+  } else {
+    probeid.value = 2
+  }
+  if (expanded.value === true) {
+    console.log('detail search')
+    console.log(date1.value)
+    console.log(date2.value)
+    console.log(model_option_search.value)
+    if (model_option_type_search.value === '异常') console.log(model_option_type_search.value)
+    else {
+      console.log(standard.value)
+    }
+  } else {
+    console.log(text.value + ' as param')
+  }
+}
+
+watch(date1, (newValue, oldValue) => {
+  // const bigger_time = date.formatDate(date2.value, 'X')
+  console.log(oldValue)
+  const unit = 'seconds'
+  const now = date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm')
+  let diff = date.getDateDiff(newValue, now, unit)
+  if (diff > 0) {
+    date1.value = oldValue
+    alert('time should not bigger than now!')
+  }
+  diff = date.getDateDiff(date2.value, newValue, unit)
+  if (diff < 0) {
+    date1.value = oldValue
+    alert('start time should not biggger than end time!')
+  }
+  if (date1.value !== oldValue) funTmp()
+  // console.log(bigger_time)
+  // console.log(newValue)
+  // console.log(diff)
+})
+watch(date2, async (newValue, oldValue) => {
+  // const bigger_time = date.formatDate(date2.value, 'X')
+  const unit = 'seconds'
+  const now = date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm')
+  let diff = date.getDateDiff(newValue, now, unit)
+  if (diff > 0) {
+    date2.value = oldValue
+    alert('time should not bigger than now!')
+  }
+  diff = date.getDateDiff(date1.value, newValue, unit)
+  if (diff > 0) {
+    date2.value = oldValue
+    alert('end time should not be smaller than start time!')
+  }
+  if (date2.value !== oldValue) funTmp()
+  // console.log(bigger_time)
+  // console.log(newValue)
+  // console.log(diff)
+})
 getDistribution()
 </script>
 
@@ -218,10 +283,11 @@ getDistribution()
         <div class="content-fixed-width">
           <div class="text-h6">网页实时状态概览</div>
           <div class="row q-mt-md">
-            <q-select outlined dense v-model="typeselect" :options="options" label="请选择" class="col-3" />
+            <q-select outlined dense v-model="typeselect" :options="options" label="请选择" class="col-3"
+                      @update:model-value="getDistribution"/>
           </div>
           <div class="q-mt-lg row">
-            <div class="col-7">
+            <div class="col">
               <pie-chart height="730" :option="dataOption"/>
             </div>
           </div>
@@ -261,11 +327,11 @@ getDistribution()
                   </template>
                 </q-input>
                 <div class="q-ml-md">一</div>
-                <q-input class="q-ml-md" filled dense v-model="date1">
+                <q-input class="q-ml-md" filled dense v-model="date2">
                   <template v-slot:prepend>
                     <q-icon name="event" class="cursor-pointer">
                       <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-date v-model="date1" mask="YYYY-MM-DD HH:mm">
+                        <q-date v-model="date2" mask="YYYY-MM-DD HH:mm">
                           <div class="row items-center justify-end">
                             <q-btn v-close-popup label="Close" color="primary" flat />
                           </div>
@@ -276,7 +342,7 @@ getDistribution()
                   <template v-slot:append>
                     <q-icon name="access_time" class="cursor-pointer">
                       <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-time v-model="date1" mask="YYYY-MM-DD HH:mm" format24h>
+                        <q-time v-model="date2" mask="YYYY-MM-DD HH:mm" format24h>
                           <div class="row items-center justify-end">
                             <q-btn v-close-popup label="Close" color="primary" flat />
                           </div>
@@ -313,7 +379,7 @@ getDistribution()
                 </q-input>
               </div>
               <div class="q-ml-sm">
-                <q-btn outline color="primary" label="搜索" />
+                <q-btn outline color="primary" label="搜索" @click="funTmp"/>
               </div>
             </div>
           </div>
@@ -329,8 +395,6 @@ getDistribution()
               color="primary"
               :loading-label="tc('notifyLoading')"
               :no-data-label="tc('noData')"
-              hide-pagination
-              :pagination="{ rowsPerPage: 0 }"
             >
               <template v-slot:body="props">
                 <q-tr :props="props">
