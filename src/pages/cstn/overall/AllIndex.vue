@@ -55,6 +55,7 @@ const NODE_LIMIT = 40 // TODO: find a proper number for maximum node number on t
 let graph = null
 let currentUnproccessedData = { nodes: [], edges: [] }
 let nodeMap = {}
+// 存储的是第一级节点相关信息
 const aggregatedNodeMap = {}
 let hiddenItemIds = []
 const largeGraphMode = true
@@ -141,776 +142,6 @@ const global = {
   }
 }
 
-onMounted(() => {
-// Custom super node
-// 自定义元素
-// 第一层元素
-  G6.registerNode(
-    'aggregated-node',
-    {
-      draw (cfg, group) {
-        const width = 53, height = 27
-        const style = cfg.style || {}
-        const colorSet = cfg.colorSet || colorSets[0]
-
-        // halo for hover
-        group.addShape('rect', {
-          attrs: {
-            x: -width * 0.55,
-            y: -height * 0.6,
-            width: width * 1.1,
-            height: height * 1.2,
-            fill: colorSet.mainFill,
-            opacity: 0.9,
-            lineWidth: 0,
-            radius: (height / 2 || 13) * 1.2
-          },
-          name: 'halo-shape',
-          visible: false
-        })
-
-        // focus stroke for hover
-        group.addShape('rect', {
-          attrs: {
-            x: -width * 0.55,
-            y: -height * 0.6,
-            width: width * 1.1,
-            height: height * 1.2,
-            fill: colorSet.mainFill, // '#3B4043',
-            stroke: '#AAB7C4',
-            lineWidth: 1,
-            lineOpacty: 0.85,
-            radius: (height / 2 || 13) * 1.2
-          },
-          name: 'stroke-shape',
-          visible: false
-        })
-
-        const keyShape = group.addShape('rect', {
-          attrs: {
-            ...style,
-            x: -width / 2,
-            y: -height / 2,
-            width,
-            height,
-            fill: colorSet.mainFill, // || '#3B4043',
-            stroke: colorSet.mainStroke,
-            lineWidth: 2,
-            cursor: 'pointer',
-            radius: height / 2 || 13,
-            lineDash: [2, 2]
-          },
-          name: 'aggregated-node-keyShape'
-        })
-
-        let labelStyle = {}
-        if (cfg.labelCfg) {
-          labelStyle = Object.assign(labelStyle, cfg.labelCfg.style)
-        }
-        group.addShape('text', {
-          attrs: {
-            text: `${cfg.count}`,
-            x: 0,
-            y: 0,
-            textAlign: 'center',
-            textBaseline: 'middle',
-            cursor: 'pointer',
-            fontSize: 12,
-            fill: '#fff',
-            opacity: 0.85,
-            fontWeight: 400
-          },
-          name: 'count-shape',
-          className: 'count-shape',
-          draggable: true
-        })
-
-        // tag for new node
-        if (cfg.new) {
-          group.addShape('circle', {
-            attrs: {
-              x: width / 2 - 3,
-              y: -height / 2 + 3,
-              r: 4,
-              fill: '#6DD400',
-              lineWidth: 0.5,
-              stroke: '#FFFFFF'
-            },
-            name: 'typeNode-tag-circle'
-          })
-        }
-        return keyShape
-      },
-      setState: (name, value, item: any) => {
-        const group = item.get('group')
-        if (name === 'layoutEnd' && value) {
-          const labelShape = group.find((e: any) => e.get('name') === 'text-shape')
-          if (labelShape) labelShape.set('visible', true)
-        } else if (name === 'hover') {
-          if (item.hasState('focus')) {
-            return
-          }
-          const halo = group.find((e: any) => e.get('name') === 'halo-shape')
-          const keyShape = item.getKeyShape()
-          const colorSet = item.getModel().colorSet || colorSets[0]
-          if (value) {
-            halo && halo.show()
-            keyShape.attr('fill', colorSet.activeFill)
-          } else {
-            halo && halo.hide()
-            keyShape.attr('fill', colorSet.mainFill)
-          }
-        } else if (name === 'focus') {
-          const stroke = group.find((e) => e.get('name') === 'stroke-shape')
-          const keyShape = item.getKeyShape()
-          const colorSet = item.getModel().colorSet || colorSets[0]
-          if (value) {
-            stroke && stroke.show()
-            keyShape.attr('fill', colorSet.selectedFill)
-          } else {
-            stroke && stroke.hide()
-            keyShape.attr('fill', colorSet.mainFill)
-          }
-        }
-      },
-      update: undefined
-    },
-    'single-node'
-  )
-  // Custom real node
-  // 多层元素
-  G6.registerNode(
-    'real-node',
-    {
-      draw (cfg, group) {
-        let r = 30
-        if (isNumber(cfg.size)) {
-          r = cfg.size / 2
-        } else if (isArray(cfg.size)) {
-          r = cfg.size[0] / 2
-        }
-        const style = cfg.style || {}
-        const colorSet = cfg.colorSet || colorSets[0]
-
-        // halo for hover
-        group.addShape('circle', {
-          attrs: {
-            x: 0,
-            y: 0,
-            r: r + 5,
-            fill: style.fill || colorSet.mainFill || '#2B384E',
-            opacity: 0.9,
-            lineWidth: 0
-          },
-          name: 'halo-shape',
-          visible: false
-        })
-
-        // focus stroke for hover
-        group.addShape('circle', {
-          attrs: {
-            x: 0,
-            y: 0,
-            r: r + 5,
-            fill: style.fill || colorSet.mainFill || '#2B384E',
-            stroke: '#fff',
-            strokeOpacity: 0.85,
-            lineWidth: 1
-          },
-          name: 'stroke-shape',
-          visible: false
-        })
-
-        const keyShape = group.addShape('circle', {
-          attrs: {
-            ...style,
-            x: 0,
-            y: 0,
-            r,
-            fill: colorSet.mainFill,
-            stroke: colorSet.mainStroke,
-            lineWidth: 2,
-            cursor: 'pointer'
-          },
-          name: 'aggregated-node-keyShape'
-        })
-
-        let labelStyle: any = {}
-        if (cfg.labelCfg) {
-          labelStyle = Object.assign(labelStyle, cfg.labelCfg.style)
-        }
-
-        if (cfg.label) {
-          const text = cfg.label
-          let labelStyle = {}
-          let refY = 0
-          if (cfg.labelCfg) {
-            labelStyle = Object.assign(labelStyle, cfg.labelCfg.style)
-            refY += cfg.labelCfg.refY || 0
-          }
-          let offsetY = 0
-          const fontSize = labelStyle.fontSize < 8 ? 8 : labelStyle.fontSize
-          const lineNum: any = cfg.labelLineNum || 1
-          offsetY = lineNum * (fontSize || 12)
-          group.addShape('text', {
-            attrs: {
-              text,
-              x: 0,
-              y: r + refY + offsetY + 5,
-              textAlign: 'center',
-              textBaseLine: 'alphabetic',
-              cursor: 'pointer',
-              fontSize,
-              fill: '#fff',
-              opacity: 0.85,
-              fontWeight: 400,
-              stroke: global.edge.labelCfg.style.stroke
-            },
-            name: 'text-shape',
-            className: 'text-shape'
-          })
-        }
-
-        // tag for new node
-        if (cfg.new) {
-          group.addShape('circle', {
-            attrs: {
-              x: r - 3,
-              y: -r + 3,
-              r: 4,
-              fill: '#6DD400',
-              lineWidth: 0.5,
-              stroke: '#FFFFFF'
-            },
-            name: 'typeNode-tag-circle'
-          })
-        }
-
-        return keyShape
-      },
-      setState: (name, value, item: any) => {
-        const group = item.get('group')
-        if (name === 'layoutEnd' && value) {
-          const labelShape = group.find((e: any) => e.get('name') === 'text-shape')
-          if (labelShape) labelShape.set('visible', true)
-        } else if (name === 'hover') {
-          if (item.hasState('focus')) {
-            return
-          }
-          const halo = group.find((e) => e.get('name') === 'halo-shape')
-          const keyShape = item.getKeyShape()
-          const colorSet = item.getModel().colorSet || colorSets[0]
-          if (value) {
-            halo && halo.show()
-            keyShape.attr('fill', colorSet.activeFill)
-          } else {
-            halo && halo.hide()
-            keyShape.attr('fill', colorSet.mainFill)
-          }
-        } else if (name === 'focus') {
-          const stroke = group.find((e) => e.get('name') === 'stroke-shape')
-          const label = group.find((e) => e.get('name') === 'text-shape')
-          const keyShape = item.getKeyShape()
-          const colorSet = item.getModel().colorSet || colorSets[0]
-          if (value) {
-            stroke && stroke.show()
-            keyShape.attr('fill', colorSet.selectedFill)
-            label && label.attr('fontWeight', 800)
-          } else {
-            stroke && stroke.hide()
-            keyShape.attr('fill', colorSet.mainFill) // '#2B384E'
-            label && label.attr('fontWeight', 400)
-          }
-        }
-      },
-      update: undefined
-    },
-    'aggregated-node'
-  ) // 这样可以继承 aggregated-node 的 setState
-
-  // Custom the quadratic edge for multiple edges between one node pair
-  G6.registerEdge(
-    'custom-quadratic',
-    {
-      setState: (name, value, item) => {
-        const group = item.get('group')
-        const model = item.getModel()
-        if (name === 'focus') {
-          const back = group.find((ele) => ele.get('name') === 'back-line')
-          if (back) {
-            back.stopAnimate()
-            back.remove()
-            back.destroy()
-          }
-          const keyShape = group.find((ele) => ele.get('name') === 'edge-shape')
-          const arrow = model.style.endArrow
-          if (value) {
-            if (keyShape.cfg.animation) {
-              keyShape.stopAnimate(true)
-            }
-            keyShape.attr({
-              strokeOpacity: animateOpacity,
-              opacity: animateOpacity,
-              stroke: '#fff',
-              endArrow: {
-                ...arrow,
-                stroke: '#fff',
-                fill: '#fff'
-              }
-            })
-            if (model.isReal) {
-              const { lineWidth, path, endArrow, stroke } = keyShape.attr()
-              const back = group.addShape('path', {
-                attrs: {
-                  lineWidth,
-                  path,
-                  stroke,
-                  endArrow,
-                  opacity: animateBackOpacity
-                },
-                name: 'back-line'
-              })
-              back.toBack()
-              const length = keyShape.getTotalLength()
-              keyShape.animate(
-                (ratio) => {
-                  // the operations in each frame. Ratio ranges from 0 to 1 indicating the prograss of the animation. Returns the modified configurations
-                  const startLen = ratio * length
-                  // Calculate the lineDash
-                  const cfg = {
-                    lineDash: [startLen, length - startLen]
-                  }
-                  return cfg
-                },
-                {
-                  repeat: true, // Whether executes the animation repeatly
-                  duration // the duration for executing once
-                }
-              )
-            } else {
-              let index = 0
-              const lineDash = keyShape.attr('lineDash')
-              const totalLength = lineDash[0] + lineDash[1]
-              keyShape.animate(
-                () => {
-                  index++
-                  if (index > totalLength) {
-                    index = 0
-                  }
-                  const res = {
-                    lineDash,
-                    lineDashOffset: -index
-                  }
-                  // returns the modified configurations here, lineDash and lineDashOffset here
-                  return res
-                },
-                {
-                  repeat: true, // whether executes the animation repeatly
-                  duration // the duration for executing once
-                }
-              )
-            }
-          } else {
-            keyShape.stopAnimate()
-            const stroke = '#acaeaf'
-            const opacity = model.isReal ? realEdgeOpacity : virtualEdgeOpacity
-            keyShape.attr({
-              stroke,
-              strokeOpacity: opacity,
-              opacity,
-              endArrow: {
-                ...arrow,
-                stroke,
-                fill: stroke
-              }
-            })
-          }
-        }
-      }
-    },
-    'quadratic'
-  )
-
-  // Custom the line edge for single edge between one node pair
-  G6.registerEdge(
-    'custom-line',
-    {
-      setState: (name, value, item) => {
-        const group = item.get('group')
-        const model = item.getModel()
-        if (name === 'focus') {
-          const keyShape = group.find((ele) => ele.get('name') === 'edge-shape')
-          const back = group.find((ele) => ele.get('name') === 'back-line')
-          if (back) {
-            back.stopAnimate()
-            back.remove()
-            back.destroy()
-          }
-          const arrow = model.style.endArrow
-          if (value) {
-            if (keyShape.cfg.animation) {
-              keyShape.stopAnimate(true)
-            }
-            keyShape.attr({
-              strokeOpacity: animateOpacity,
-              opacity: animateOpacity,
-              stroke: '#fff',
-              endArrow: {
-                ...arrow,
-                stroke: '#fff',
-                fill: '#fff'
-              }
-            })
-            if (model.isReal) {
-              const { path, stroke, lineWidth } = keyShape.attr()
-              const back = group.addShape('path', {
-                attrs: {
-                  path,
-                  stroke,
-                  lineWidth,
-                  opacity: animateBackOpacity
-                },
-                name: 'back-line'
-              })
-              back.toBack()
-              const length = keyShape.getTotalLength()
-              keyShape.animate(
-                (ratio) => {
-                  // the operations in each frame. Ratio ranges from 0 to 1 indicating the prograss of the animation. Returns the modified configurations
-                  const startLen = ratio * length
-                  // Calculate the lineDash
-                  const cfg = {
-                    lineDash: [startLen, length - startLen]
-                  }
-                  return cfg
-                },
-                {
-                  repeat: true, // Whether executes the animation repeatly
-                  duration // the duration for executing once
-                }
-              )
-            } else {
-              const lineDash = keyShape.attr('lineDash')
-              const totalLength = lineDash[0] + lineDash[1]
-              let index = 0
-              keyShape.animate(
-                () => {
-                  index++
-                  if (index > totalLength) {
-                    index = 0
-                  }
-                  const res = {
-                    lineDash,
-                    lineDashOffset: -index
-                  }
-                  // returns the modified configurations here, lineDash and lineDashOffset here
-                  return res
-                },
-                {
-                  repeat: true, // whether executes the animation repeatly
-                  duration // the duration for executing once
-                }
-              )
-            }
-          } else {
-            keyShape.stopAnimate()
-            const stroke = '#acaeaf'
-            const opacity = model.isReal ? realEdgeOpacity : virtualEdgeOpacity
-            keyShape.attr({
-              stroke,
-              strokeOpacity: opacity,
-              opacity,
-              endArrow: {
-                ...arrow,
-                stroke,
-                fill: stroke
-              }
-            })
-          }
-        }
-      }
-    },
-    'single-edge'
-  )
-//   fetch('https://gw.alipayobjects.com/os/antvdemo/assets/data/relations.json').then((res) => res.json()).then((data) => {
-//
-// })
-  const container = document.getElementById('container')
-  // const descriptionDiv = document.createElement('div')
-  // descriptionDiv.innerHTML = `<a href='/en/largegraph' target='_blanck'>Click【HERE】To Full Demo</a>
-  //   <br/>
-  //   <a href='/zh/largegraph' target='_blanck'>点击【这里】进入完整 Demo</a>`
-  // descriptionDiv.style.textAlign = 'right'
-  // descriptionDiv.style.color = '#fff'
-  // descriptionDiv.style.position = 'absolute'
-  // descriptionDiv.style.right = '32px'
-  // descriptionDiv.style.marginTop = '8px'
-  // container.appendChild(descriptionDiv)
-
-  container.style.backgroundColor = '#2b2f33'
-
-  CANVAS_WIDTH = container.scrollWidth
-  CANVAS_HEIGHT = (container.scrollHeight || 500) - 30
-
-  nodeMap = {}
-  // 将数据信息data聚合
-  const clusteredData = louvain(mapData, false, 'weight')
-  const aggregatedData = { nodes: [], edges: [] }
-  clusteredData.clusters.forEach((cluster, i) => {
-    cluster.nodes.forEach((node) => {
-      node.level = 0
-      node.label = node.id
-      node.type = ''
-      node.colorSet = colorSets[i]
-      nodeMap[node.id] = node
-    })
-    const cnode = {
-      id: cluster.id,
-      type: 'aggregated-node',
-      count: cluster.nodes.length,
-      level: 1,
-      label: cluster.id,
-      colorSet: colorSets[i],
-      idx: i
-    }
-    aggregatedNodeMap[cluster.id] = cnode
-    aggregatedData.nodes.push(cnode)
-  })
-  clusteredData.clusterEdges.forEach((clusterEdge) => {
-    const cedge = {
-      ...clusterEdge,
-      size: Math.log(clusterEdge.count),
-      label: '',
-      id: `edge-${uniqueId()}`
-    }
-    if (cedge.source === cedge.target) {
-      cedge.type = 'loop'
-      cedge.loopCfg = {
-        dist: 20
-      }
-    } else cedge.type = 'line'
-    aggregatedData.edges.push(cedge)
-  })
-
-  mapData.edges.forEach((edge) => {
-    edge.label = `${edge.source}-${edge.target}`
-    edge.id = `edge-${uniqueId()}`
-  })
-
-  currentUnproccessedData = aggregatedData
-
-  const { edges: processedEdges } = processNodesEdges(
-    currentUnproccessedData.nodes,
-    currentUnproccessedData.edges,
-    CANVAS_WIDTH,
-    CANVAS_HEIGHT,
-    largeGraphMode,
-    true,
-    true
-  )
-
-  const contextMenu = new G6.Menu({
-    shouldBegin (evt) {
-      if (evt.target && evt.target.isCanvas && evt.target.isCanvas()) return true
-      if (evt.item) return true
-      return false
-    },
-    getContent (evt) {
-      const { item } = evt
-      if (evt.target && evt.target.isCanvas && evt.target.isCanvas()) {
-        return `<ul>
-          <li id='show'>显示所有隐藏的项</li>
-          <li id='collapseAll'>折叠所有节点</li>
-        </ul>`
-      } else if (!item) return
-      const itemType = item.getType()
-      const model = item.getModel()
-      if (itemType && model) {
-        if (itemType === 'node') {
-          if (model.level !== 0) {
-            return `<ul>
-              <li id='expand'>展开节点</li>
-              <li id='hide'>隐藏节点</li>
-            </ul>`
-          } else {
-            return `<ul>
-              <li id='collapse'>折叠该节点</li>
-              <li id='neighbor-1'>展开下级节点</li>
-<!--              <li id='neighbor-2'>Find 2-degree Neighbors</li>-->
-<!--              <li id='neighbor-3'>Find 3-degree Neighbors</li>-->
-              <li id='hide'>隐藏该节点</li>
-            </ul>`
-          }
-        }
-        else {
-          return ''
-          //   return `<ul>
-          //   <li id='hide'>Hide the Edge</li>
-          // </ul>`
-        }
-      }
-    },
-    // 右键菜单电视事件
-    handleMenuClick: (target, item) => {
-      const model = item && item.getModel()
-      const liIdStrs = target.id.split('-')
-      let mixedGraphData
-      switch (liIdStrs[0]) {
-        case 'hide':
-          graph.hideItem(item)
-          hiddenItemIds.push(model.id)
-          break
-        case 'expand':
-          const newArray = manageExpandCollapseArray(graph.getNodes().length, model, collapseArray, expandArray)
-          expandArray = newArray.expandArray
-          collapseArray = newArray.collapseArray
-          mixedGraphData = getMixedGraph(
-            clusteredData,
-            mapData,
-            nodeMap,
-            aggregatedNodeMap,
-            expandArray,
-            collapseArray
-          )
-          break
-        case 'collapse':
-          const aggregatedNode = aggregatedNodeMap[model.clusterId]
-          manipulatePosition = { x: aggregatedNode.x, y: aggregatedNode.y }
-          collapseArray.push(aggregatedNode)
-          for (let i = 0; i < expandArray.length; i++) {
-            if (expandArray[i].id === model.clusterId) {
-              expandArray.splice(i, 1)
-              break
-            }
-          }
-          mixedGraphData = getMixedGraph(
-            clusteredData,
-            mapData,
-            nodeMap,
-            aggregatedNodeMap,
-            expandArray,
-            collapseArray
-          )
-          break
-        case 'collapseAll':
-          expandArray = []
-          collapseArray = []
-          mixedGraphData = getMixedGraph(
-            clusteredData,
-            mapData,
-            nodeMap,
-            aggregatedNodeMap,
-            expandArray,
-            collapseArray
-          )
-          break
-        case 'neighbor':
-          const expandNeighborSteps = parseInt(liIdStrs[1])
-          mixedGraphData = getNeighborMixedGraph(
-            model,
-            expandNeighborSteps,
-            mapData,
-            clusteredData,
-            currentUnproccessedData,
-            nodeMap,
-            aggregatedNodeMap,
-            10
-          )
-          break
-        case 'show':
-          showItems(graph)
-          break
-        default:
-          break
-      }
-      if (mixedGraphData) {
-        cachePositions = cacheNodePositions(graph.getNodes())
-        currentUnproccessedData = mixedGraphData
-        handleRefreshGraph(
-          graph,
-          currentUnproccessedData,
-          CANVAS_WIDTH,
-          CANVAS_HEIGHT,
-          largeGraphMode,
-          true,
-          false
-        )
-      }
-    },
-    // offsetX and offsetY include the padding of the parent container
-    // 需要加上父级容器的 padding-left 16 与自身偏移量 10
-    offsetX: 16 + 10,
-    // 需要加上父级容器的 padding-top 24 、画布兄弟元素高度、与自身偏移量 10
-    offsetY: 0,
-    // the types of items that allow the menu show up
-    // 在哪些类型的元素上响应
-    itemTypes: ['node', 'edge', 'canvas']
-  })
-
-  // 渲染图表
-  graph = new G6.Graph({
-    container: 'container',
-    width: CANVAS_WIDTH,
-    height: CANVAS_HEIGHT,
-    linkCenter: true,
-    minZoom: 0.1,
-    groupByTypes: false,
-    modes: {
-      default: [
-        {
-          type: 'drag-canvas',
-          enableOptimize: true
-        },
-        {
-          type: 'zoom-canvas',
-          enableOptimize: true,
-          optimizeZoom: 0.01
-        },
-        'drag-node',
-        'shortcuts-call'
-      ],
-      lassoSelect: [
-        {
-          type: 'zoom-canvas',
-          enableOptimize: true,
-          optimizeZoom: 0.01
-        },
-        {
-          type: 'lasso-select',
-          selectedState: 'focus',
-          trigger: 'drag'
-        }
-      ],
-      fisheyeMode: []
-    },
-    defaultNode: {
-      type: 'aggregated-node',
-      size: DEFAULTNODESIZE
-    },
-    plugins: [contextMenu]
-  })
-
-  graph.get('canvas').set('localRefresh', false)
-
-  // 自定义布局的数据
-  const layoutConfig = getForceLayoutConfig(graph, largeGraphMode)
-  // console.log('layoutConfig', layoutConfig)
-  // console.log('layout', layout)
-  layoutConfig.center = [CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2]
-  layout.instance = new G6.Layout.gForce(layoutConfig)
-  layout.instance.init({
-    nodes: currentUnproccessedData.nodes,
-    edges: processedEdges
-  })
-  // layout.instance.animate = false
-  layout.instance.execute()
-
-  bindListener(graph)
-  console.log(aggregatedData)
-  console.log(processedEdges)
-  graph.data({ nodes: aggregatedData.nodes, edges: processedEdges })
-  graph.render()
-})
 const descendCompare = (p) => {
   // 这是比较函数
   return function (m, n) {
@@ -1088,11 +319,11 @@ const processNodesEdges = (nodes, edges, width, height, largeGraphMode, edgeLabe
       lineDash,
       endArrow: arrowPath
         ? {
-            path: arrowPath,
-            d,
-            fill: stroke,
-            strokeOpacity: 0
-          }
+          path: arrowPath,
+          d,
+          fill: stroke,
+          strokeOpacity: 0
+        }
         : false
     }
     edge.labelCfg = {
@@ -1170,7 +401,7 @@ const getForceLayoutConfig = (graph, largeGraphMode, configSettings) => {
     alphaMin
   } = configSettings || { preventOverlap: true }
 
-  if (!linkDistance && linkDistance !== 0) linkDistance = 225
+  if (!linkDistance && linkDistance !== 0) linkDistance = 700
   if (!edgeStrength && edgeStrength !== 0) edgeStrength = 50
   if (!nodeStrength && nodeStrength !== 0) nodeStrength = 200
   if (!nodeSpacing && nodeSpacing !== 0) nodeSpacing = 5
@@ -1178,9 +409,10 @@ const getForceLayoutConfig = (graph, largeGraphMode, configSettings) => {
   const config = {
     type: 'gForce',
     minMovement: 0.01,
-    maxIteration: 3000,
+    maxIteration: 800,
     preventOverlap,
     damping: 0.99,
+    // // 控制边长度
     linkDistance: (d) => {
       let dist = linkDistance
       const sourceNode = nodeMap[d.source] || aggregatedNodeMap[d.source]
@@ -1192,6 +424,7 @@ const getForceLayoutConfig = (graph, largeGraphMode, configSettings) => {
       if (!sourceNode.level && !targetNode.level) dist = linkDistance * 0.3
       return dist
     },
+    // 边的作用力（引力）大小
     edgeStrength: (d) => {
       const sourceNode = nodeMap[d.source] || aggregatedNodeMap[d.source]
       const targetNode = nodeMap[d.target] || aggregatedNodeMap[d.target]
@@ -1201,6 +434,7 @@ const getForceLayoutConfig = (graph, largeGraphMode, configSettings) => {
       if (sourceNode.level || targetNode.level) return edgeStrength
       return edgeStrength
     },
+    // 节点作用力，正数代表节点之间的斥力作用，负数代表节点之间的引力作用（注意与 'force' 相反）
     nodeStrength: (d) => {
       // 给离散点引力，让它们聚集
       if (d.degree === 0) return -10
@@ -1208,10 +442,12 @@ const getForceLayoutConfig = (graph, largeGraphMode, configSettings) => {
       if (d.level) return nodeStrength * 2
       return nodeStrength
     },
+    // 节点大小（直径）。用于碰撞检测。若不指定，则根据传入的节点的 size 属性计算。若即不指定，节点中也没有 size，则默认大小为 10
     nodeSize: (d) => {
       if (!nodeSize && d.size) return d.size
       return 50
     },
+    // 防止重叠时节点边缘间距的最小值。可以是回调函数, 为不同节点设置不同的最小间距, 如示例 2 所示
     nodeSpacing: (d) => {
       if (d.degree === 0) return nodeSpacing * 2
       if (d.level) return nodeSpacing
@@ -1237,7 +473,6 @@ const getForceLayoutConfig = (graph, largeGraphMode, configSettings) => {
   if (alpha) config.alpha = alpha
   if (alphaDecay) config.alphaDecay = alphaDecay
   if (alphaMin) config.alphaMin = alphaMin
-
   return config
 }
 
@@ -1362,7 +597,6 @@ const getMixedGraph = (aggregatedData, originData, nodeMap, aggregatedNodeMap, e
   })
   aggregatedData.clusterEdges.forEach((edge) => {
     if (expandMap[edge.source] || expandMap[edge.target]) {
-      console.log('return')
       return
     } else {
       edges.push(edge)
@@ -1675,6 +909,782 @@ const bindListener = (graph) => {
   })
 }
 
+onMounted(() => {
+// Custom super node
+// 自定义元素
+// 第一层元素
+  G6.registerNode(
+    'aggregated-node',
+    {
+      draw (cfg, group) {
+        // console.log('cfg1', cfg)
+        const width = 53, height = 27
+        const style = cfg.style || {}
+        const colorSet = cfg.colorSet || colorSets[0]
+
+        // halo for hover
+        group.addShape('rect', {
+          attrs: {
+            x: -width * 0.55,
+            y: -height * 0.6,
+            width: width * 1.1,
+            height: height * 1.2,
+            fill: colorSet.mainFill,
+            opacity: 0.9,
+            lineWidth: 0,
+            radius: (height / 2 || 13) * 1.2
+          },
+          name: 'halo-shape',
+          visible: false
+        })
+
+        // focus stroke for hover
+        group.addShape('rect', {
+          attrs: {
+            x: -width * 0.55,
+            y: -height * 0.6,
+            width: width * 1.1,
+            height: height * 1.2,
+            fill: colorSet.mainFill, // '#3B4043',
+            stroke: '#AAB7C4',
+            lineWidth: 1,
+            lineOpacty: 0.85,
+            radius: (height / 2 || 13) * 1.2
+          },
+          name: 'stroke-shape',
+          visible: false
+        })
+
+        const keyShape = group.addShape('rect', {
+          attrs: {
+            ...style,
+            x: -width / 2,
+            y: -height / 2,
+            width,
+            height,
+            fill: colorSet.mainFill, // || '#3B4043',
+            stroke: colorSet.mainStroke,
+            lineWidth: 2,
+            cursor: 'pointer',
+            radius: height / 2 || 13,
+            lineDash: [2, 2]
+          },
+          name: 'aggregated-node-keyShape'
+        })
+
+        let labelStyle = {}
+        if (cfg.labelCfg) {
+          labelStyle = Object.assign(labelStyle, cfg.labelCfg.style)
+        }
+        group.addShape('text', {
+          attrs: {
+            text: `${cfg.count + '---' + cfg.label}`,
+            x: 0,
+            y: 0,
+            textAlign: 'center',
+            textBaseline: 'middle',
+            cursor: 'pointer',
+            fontSize: 12,
+            fill: '#fff',
+            opacity: 0.85,
+            fontWeight: 400
+          },
+          name: 'count-shape',
+          className: 'count-shape',
+          draggable: true
+        })
+
+        // tag for new node
+        if (cfg.new) {
+          group.addShape('circle', {
+            attrs: {
+              x: width / 2 - 3,
+              y: -height / 2 + 3,
+              r: 4,
+              fill: '#6DD400',
+              lineWidth: 0.5,
+              stroke: '#FFFFFF'
+            },
+            name: 'typeNode-tag-circle'
+          })
+        }
+        return keyShape
+      },
+      setState: (name, value, item: any) => {
+        const group = item.get('group')
+        if (name === 'layoutEnd' && value) {
+          const labelShape = group.find((e: any) => e.get('name') === 'text-shape')
+          if (labelShape) labelShape.set('visible', true)
+        } else if (name === 'hover') {
+          if (item.hasState('focus')) {
+            return
+          }
+          const halo = group.find((e: any) => e.get('name') === 'halo-shape')
+          const keyShape = item.getKeyShape()
+          const colorSet = item.getModel().colorSet || colorSets[0]
+          if (value) {
+            halo && halo.show()
+            keyShape.attr('fill', colorSet.activeFill)
+          } else {
+            halo && halo.hide()
+            keyShape.attr('fill', colorSet.mainFill)
+          }
+        } else if (name === 'focus') {
+          const stroke = group.find((e) => e.get('name') === 'stroke-shape')
+          const keyShape = item.getKeyShape()
+          const colorSet = item.getModel().colorSet || colorSets[0]
+          if (value) {
+            stroke && stroke.show()
+            keyShape.attr('fill', colorSet.selectedFill)
+          } else {
+            stroke && stroke.hide()
+            keyShape.attr('fill', colorSet.mainFill)
+          }
+        }
+      },
+      update: undefined
+    },
+    'single-node'
+  )
+  // Custom real node
+  // 多层元素
+  G6.registerNode(
+    'real-node',
+    {
+      draw (cfg, group) {
+        // console.log('cfg2', cfg)
+        let r = 30
+        if (isNumber(cfg.size)) {
+          r = cfg.size / 2
+        } else if (isArray(cfg.size)) {
+          r = cfg.size[0] / 2
+        }
+        const style = cfg.style || {}
+        const colorSet = cfg.colorSet || colorSets[0]
+
+        // halo for hover
+        group.addShape('circle', {
+          attrs: {
+            x: 0,
+            y: 0,
+            r: r + 5,
+            fill: style.fill || colorSet.mainFill || '#2B384E',
+            opacity: 0.9,
+            lineWidth: 0
+          },
+          name: 'halo-shape',
+          visible: false
+        })
+
+        // focus stroke for hover
+        group.addShape('circle', {
+          attrs: {
+            x: 0,
+            y: 0,
+            r: r + 5,
+            fill: style.fill || colorSet.mainFill || '#2B384E',
+            stroke: '#fff',
+            strokeOpacity: 0.85,
+            lineWidth: 1
+          },
+          name: 'stroke-shape',
+          visible: false
+        })
+
+        const keyShape = group.addShape('circle', {
+          attrs: {
+            ...style,
+            x: 0,
+            y: 0,
+            r,
+            fill: colorSet.mainFill,
+            stroke: colorSet.mainStroke,
+            lineWidth: 2,
+            cursor: 'pointer'
+          },
+          name: 'aggregated-node-keyShape'
+        })
+
+        let labelStyle: any = {}
+        if (cfg.labelCfg) {
+          labelStyle = Object.assign(labelStyle, cfg.labelCfg.style)
+        }
+
+        if (cfg.label) {
+          const text = cfg.label
+          let labelStyle = {}
+          let refY = 0
+          if (cfg.labelCfg) {
+            labelStyle = Object.assign(labelStyle, cfg.labelCfg.style)
+            refY += cfg.labelCfg.refY || 0
+          }
+          let offsetY = 0
+          const fontSize = labelStyle.fontSize < 8 ? 8 : labelStyle.fontSize
+          const lineNum: any = cfg.labelLineNum || 1
+          offsetY = lineNum * (fontSize || 12)
+          group.addShape('text', {
+            attrs: {
+              text,
+              x: 0,
+              y: r + refY + offsetY + 5,
+              textAlign: 'center',
+              textBaseLine: 'alphabetic',
+              cursor: 'pointer',
+              fontSize,
+              fill: '#fff',
+              opacity: 0.85,
+              fontWeight: 400,
+              stroke: global.edge.labelCfg.style.stroke
+            },
+            name: 'text-shape',
+            className: 'text-shape'
+          })
+        }
+
+        // tag for new node
+        if (cfg.new) {
+          group.addShape('circle', {
+            attrs: {
+              x: r - 3,
+              y: -r + 3,
+              r: 4,
+              fill: '#6DD400',
+              lineWidth: 0.5,
+              stroke: '#FFFFFF'
+            },
+            name: 'typeNode-tag-circle'
+          })
+        }
+
+        return keyShape
+      },
+      setState: (name, value, item: any) => {
+        const group = item.get('group')
+        if (name === 'layoutEnd' && value) {
+          const labelShape = group.find((e: any) => e.get('name') === 'text-shape')
+          if (labelShape) labelShape.set('visible', true)
+        } else if (name === 'hover') {
+          if (item.hasState('focus')) {
+            return
+          }
+          const halo = group.find((e) => e.get('name') === 'halo-shape')
+          const keyShape = item.getKeyShape()
+          const colorSet = item.getModel().colorSet || colorSets[0]
+          if (value) {
+            halo && halo.show()
+            keyShape.attr('fill', colorSet.activeFill)
+          } else {
+            halo && halo.hide()
+            keyShape.attr('fill', colorSet.mainFill)
+          }
+        } else if (name === 'focus') {
+          const stroke = group.find((e) => e.get('name') === 'stroke-shape')
+          const label = group.find((e) => e.get('name') === 'text-shape')
+          const keyShape = item.getKeyShape()
+          const colorSet = item.getModel().colorSet || colorSets[0]
+          if (value) {
+            stroke && stroke.show()
+            keyShape.attr('fill', colorSet.selectedFill)
+            label && label.attr('fontWeight', 800)
+          } else {
+            stroke && stroke.hide()
+            keyShape.attr('fill', colorSet.mainFill) // '#2B384E'
+            label && label.attr('fontWeight', 400)
+          }
+        }
+      },
+      update: undefined
+    },
+    'aggregated-node'
+  ) // 这样可以继承 aggregated-node 的 setState
+
+  // Custom the quadratic edge for multiple edges between one node pair
+  G6.registerEdge(
+    'custom-quadratic',
+    {
+      setState: (name, value, item) => {
+        const group = item.get('group')
+        const model = item.getModel()
+        if (name === 'focus') {
+          const back = group.find((ele) => ele.get('name') === 'back-line')
+          if (back) {
+            back.stopAnimate()
+            back.remove()
+            back.destroy()
+          }
+          const keyShape = group.find((ele) => ele.get('name') === 'edge-shape')
+          const arrow = model.style.endArrow
+          if (value) {
+            if (keyShape.cfg.animation) {
+              keyShape.stopAnimate(true)
+            }
+            keyShape.attr({
+              strokeOpacity: animateOpacity,
+              opacity: animateOpacity,
+              stroke: '#fff',
+              endArrow: {
+                ...arrow,
+                stroke: '#fff',
+                fill: '#fff'
+              }
+            })
+            if (model.isReal) {
+              const { lineWidth, path, endArrow, stroke } = keyShape.attr()
+              const back = group.addShape('path', {
+                attrs: {
+                  lineWidth,
+                  path,
+                  stroke,
+                  endArrow,
+                  opacity: animateBackOpacity
+                },
+                name: 'back-line'
+              })
+              back.toBack()
+              const length = keyShape.getTotalLength()
+              keyShape.animate(
+                (ratio) => {
+                  // the operations in each frame. Ratio ranges from 0 to 1 indicating the prograss of the animation. Returns the modified configurations
+                  const startLen = ratio * length
+                  // Calculate the lineDash
+                  const cfg = {
+                    lineDash: [startLen, length - startLen]
+                  }
+                  return cfg
+                },
+                {
+                  repeat: true, // Whether executes the animation repeatly
+                  duration // the duration for executing once
+                }
+              )
+            } else {
+              let index = 0
+              const lineDash = keyShape.attr('lineDash')
+              const totalLength = lineDash[0] + lineDash[1]
+              keyShape.animate(
+                () => {
+                  index++
+                  if (index > totalLength) {
+                    index = 0
+                  }
+                  const res = {
+                    lineDash,
+                    lineDashOffset: -index
+                  }
+                  // returns the modified configurations here, lineDash and lineDashOffset here
+                  return res
+                },
+                {
+                  repeat: true, // whether executes the animation repeatly
+                  duration // the duration for executing once
+                }
+              )
+            }
+          } else {
+            keyShape.stopAnimate()
+            const stroke = '#acaeaf'
+            const opacity = model.isReal ? realEdgeOpacity : virtualEdgeOpacity
+            keyShape.attr({
+              stroke,
+              strokeOpacity: opacity,
+              opacity,
+              endArrow: {
+                ...arrow,
+                stroke,
+                fill: stroke
+              }
+            })
+          }
+        }
+      }
+    },
+    'quadratic'
+  )
+
+  // Custom the line edge for single edge between one node pair
+  // G6.registerEdge(
+  //   'custom-line',
+  //   {
+  //     setState: (name, value, item) => {
+  //       const group = item.get('group')
+  //       const model = item.getModel()
+  //       if (name === 'focus') {
+  //         const keyShape = group.find((ele) => ele.get('name') === 'edge-shape')
+  //         const back = group.find((ele) => ele.get('name') === 'back-line')
+  //         if (back) {
+  //           back.stopAnimate()
+  //           back.remove()
+  //           back.destroy()
+  //         }
+  //         const arrow = model.style.endArrow
+  //         if (value) {
+  //           if (keyShape.cfg.animation) {
+  //             keyShape.stopAnimate(true)
+  //           }
+  //           keyShape.attr({
+  //             strokeOpacity: animateOpacity,
+  //             opacity: animateOpacity,
+  //             stroke: '#fff',
+  //             endArrow: {
+  //               ...arrow,
+  //               stroke: '#fff',
+  //               fill: '#fff'
+  //             }
+  //           })
+  //           if (model.isReal) {
+  //             const { path, stroke, lineWidth } = keyShape.attr()
+  //             const back = group.addShape('path', {
+  //               attrs: {
+  //                 path,
+  //                 stroke,
+  //                 lineWidth,
+  //                 opacity: animateBackOpacity
+  //               },
+  //               name: 'back-line'
+  //             })
+  //             back.toBack()
+  //             const length = keyShape.getTotalLength()
+  //             keyShape.animate(
+  //               (ratio) => {
+  //                 // the operations in each frame. Ratio ranges from 0 to 1 indicating the prograss of the animation. Returns the modified configurations
+  //                 const startLen = ratio * length
+  //                 // Calculate the lineDash
+  //                 const cfg = {
+  //                   lineDash: [startLen, length - startLen]
+  //                 }
+  //                 return cfg
+  //               },
+  //               {
+  //                 repeat: true, // Whether executes the animation repeatly
+  //                 duration // the duration for executing once
+  //               }
+  //             )
+  //           } else {
+  //             const lineDash = keyShape.attr('lineDash')
+  //             const totalLength = lineDash[0] + lineDash[1]
+  //             let index = 0
+  //             keyShape.animate(
+  //               () => {
+  //                 index++
+  //                 if (index > totalLength) {
+  //                   index = 0
+  //                 }
+  //                 const res = {
+  //                   lineDash,
+  //                   lineDashOffset: -index
+  //                 }
+  //                 // returns the modified configurations here, lineDash and lineDashOffset here
+  //                 return res
+  //               },
+  //               {
+  //                 repeat: true, // whether executes the animation repeatly
+  //                 duration // the duration for executing once
+  //               }
+  //             )
+  //           }
+  //         } else {
+  //           keyShape.stopAnimate()
+  //           const stroke = '#acaeaf'
+  //           const opacity = model.isReal ? realEdgeOpacity : virtualEdgeOpacity
+  //           keyShape.attr({
+  //             stroke,
+  //             strokeOpacity: opacity,
+  //             opacity,
+  //             endArrow: {
+  //               ...arrow,
+  //               stroke,
+  //               fill: stroke
+  //             }
+  //           })
+  //         }
+  //       }
+  //     }
+  //   },
+  //   'single-edge'
+  // )
+//   fetch('https://gw.alipayobjects.com/os/antvdemo/assets/data/relations.json').then((res) => res.json()).then((data) => {
+//
+// })
+  const container = document.getElementById('container')
+  // const descriptionDiv = document.createElement('div')
+  // descriptionDiv.innerHTML = `<a href='/en/largegraph' target='_blanck'>Click【HERE】To Full Demo</a>
+  //   <br/>
+  //   <a href='/zh/largegraph' target='_blanck'>点击【这里】进入完整 Demo</a>`
+  // descriptionDiv.style.textAlign = 'right'
+  // descriptionDiv.style.color = '#fff'
+  // descriptionDiv.style.position = 'absolute'
+  // descriptionDiv.style.right = '32px'
+  // descriptionDiv.style.marginTop = '8px'
+  // container.appendChild(descriptionDiv)
+
+  container.style.backgroundColor = '#2b2f33'
+
+  CANVAS_WIDTH = container.scrollWidth
+  CANVAS_HEIGHT = (container.scrollHeight || 500) - 30
+  // 存储的是第二级的所有节点
+  nodeMap = {}
+  // 将数据信息data聚合
+  console.log('mapData', mapData)
+  console.log('mapData', mapData)
+  const clusteredData = louvain(mapData, false, 'weight')
+  // 存储第一级几点以及连线信息
+  const aggregatedData = { nodes: [], edges: [] }
+  console.log('clusteredData', clusteredData)
+  // console.log(clusteredData1)
+  // 子节点从这段代码遍历出来
+  clusteredData.clusters.forEach((cluster, i) => {
+    cluster.nodes.forEach((node) => {
+      node.level = 0
+      node.label = node.id
+      node.type = ''
+      node.colorSet = colorSets[i]
+      nodeMap[node.id] = node
+    })
+    const cnode = {
+      id: cluster.id,
+      type: 'aggregated-node',
+      count: cluster.nodes.length,
+      level: 1,
+      label: cluster.id,
+      colorSet: colorSets[i],
+      idx: i
+    }
+    aggregatedNodeMap[cluster.id] = cnode
+    aggregatedData.nodes.push(cnode)
+  })
+  clusteredData.clusterEdges.forEach((clusterEdge) => {
+    const cedge = {
+      ...clusterEdge,
+      size: Math.log(clusterEdge.count),
+      label: '',
+      id: `edge-${uniqueId()}`
+    }
+    if (cedge.source === cedge.target) {
+      cedge.type = 'loop'
+      cedge.loopCfg = {
+        dist: 20
+      }
+    } else cedge.type = 'line'
+    aggregatedData.edges.push(cedge)
+  })
+  console.log(aggregatedData)
+  mapData.edges.forEach((edge) => {
+    edge.label = `${edge.source}-${edge.target}`
+    edge.id = `edge-${uniqueId()}`
+  })
+  currentUnproccessedData = aggregatedData
+  const { edges: processedEdges } = processNodesEdges(
+    currentUnproccessedData.nodes,
+    currentUnproccessedData.edges,
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT,
+    largeGraphMode,
+    true,
+    true
+  )
+
+  const contextMenu = new G6.Menu({
+    shouldBegin (evt) {
+      if (evt.target && evt.target.isCanvas && evt.target.isCanvas()) return true
+      if (evt.item) return true
+      return false
+    },
+    getContent (evt) {
+      const { item } = evt
+      if (evt.target && evt.target.isCanvas && evt.target.isCanvas()) {
+        return `<ul>
+          <li id='show'>显示所有隐藏的项</li>
+          <li id='collapseAll'>折叠所有节点</li>
+        </ul>`
+      } else if (!item) return
+      const itemType = item.getType()
+      const model = item.getModel()
+      if (itemType && model) {
+        if (itemType === 'node') {
+          if (model.level !== 0) {
+            return `<ul>
+              <li id='expand'>展开节点</li>
+              <li id='hide'>隐藏节点</li>
+            </ul>`
+          } else {
+            return `<ul>
+              <li id='collapse'>折叠该节点</li>
+              <li id='neighbor-1'>展开下级节点</li>
+<!--              <li id='neighbor-2'>Find 2-degree Neighbors</li>-->
+<!--              <li id='neighbor-3'>Find 3-degree Neighbors</li>-->
+              <li id='hide'>隐藏该节点</li>
+            </ul>`
+          }
+        }
+        else {
+          return ''
+          //   return `<ul>
+          //   <li id='hide'>Hide the Edge</li>
+          // </ul>`
+        }
+      }
+    },
+    // 右键菜单电视事件
+    handleMenuClick: (target, item) => {
+      const model = item && item.getModel()
+      const liIdStrs = target.id.split('-')
+      let mixedGraphData
+      switch (liIdStrs[0]) {
+        case 'hide':
+          graph.hideItem(item)
+          hiddenItemIds.push(model.id)
+          break
+        case 'expand':
+          const newArray = manageExpandCollapseArray(graph.getNodes().length, model, collapseArray, expandArray)
+          expandArray = newArray.expandArray
+          collapseArray = newArray.collapseArray
+          mixedGraphData = getMixedGraph(
+            clusteredData,
+            mapData,
+            nodeMap,
+            aggregatedNodeMap,
+            expandArray,
+            collapseArray
+          )
+          break
+        case 'collapse':
+          const aggregatedNode = aggregatedNodeMap[model.clusterId]
+          manipulatePosition = { x: aggregatedNode.x, y: aggregatedNode.y }
+          collapseArray.push(aggregatedNode)
+          for (let i = 0; i < expandArray.length; i++) {
+            if (expandArray[i].id === model.clusterId) {
+              expandArray.splice(i, 1)
+              break
+            }
+          }
+          mixedGraphData = getMixedGraph(
+            clusteredData,
+            mapData,
+            nodeMap,
+            aggregatedNodeMap,
+            expandArray,
+            collapseArray
+          )
+          break
+        case 'collapseAll':
+          expandArray = []
+          collapseArray = []
+          mixedGraphData = getMixedGraph(
+            clusteredData,
+            mapData,
+            nodeMap,
+            aggregatedNodeMap,
+            expandArray,
+            collapseArray
+          )
+          break
+        case 'neighbor':
+          const expandNeighborSteps = parseInt(liIdStrs[1])
+          mixedGraphData = getNeighborMixedGraph(
+            model,
+            expandNeighborSteps,
+            mapData,
+            clusteredData,
+            currentUnproccessedData,
+            nodeMap,
+            aggregatedNodeMap,
+            10
+          )
+          break
+        case 'show':
+          showItems(graph)
+          break
+        default:
+          break
+      }
+      if (mixedGraphData) {
+        cachePositions = cacheNodePositions(graph.getNodes())
+        currentUnproccessedData = mixedGraphData
+        handleRefreshGraph(
+          graph,
+          currentUnproccessedData,
+          CANVAS_WIDTH,
+          CANVAS_HEIGHT,
+          largeGraphMode,
+          true,
+          false
+        )
+      }
+    },
+    // offsetX and offsetY include the padding of the parent container
+    // 需要加上父级容器的 padding-left 16 与自身偏移量 10
+    offsetX: 16 + 10,
+    // 需要加上父级容器的 padding-top 24 、画布兄弟元素高度、与自身偏移量 10
+    offsetY: 0,
+    // the types of items that allow the menu show up
+    // 在哪些类型的元素上响应
+    itemTypes: ['node', 'edge', 'canvas']
+  })
+
+  // 渲染图表
+  graph = new G6.Graph({
+    container: 'container',
+    width: CANVAS_WIDTH,
+    height: CANVAS_HEIGHT,
+    linkCenter: true,
+    minZoom: 0.1,
+    groupByTypes: false,
+    modes: {
+      default: [
+        {
+          type: 'drag-canvas',
+          enableOptimize: true
+        },
+        {
+          type: 'zoom-canvas',
+          enableOptimize: true,
+          optimizeZoom: 0.01
+        },
+        'drag-node',
+        'shortcuts-call'
+      ],
+      lassoSelect: [
+        {
+          type: 'zoom-canvas',
+          enableOptimize: true,
+          optimizeZoom: 0.01
+        },
+        {
+          type: 'lasso-select',
+          selectedState: 'focus',
+          trigger: 'drag'
+        }
+      ],
+      fisheyeMode: []
+    },
+    defaultNode: {
+      type: 'aggregated-node',
+      size: DEFAULTNODESIZE
+    },
+    plugins: [contextMenu]
+  })
+
+  graph.get('canvas').set('localRefresh', false)
+
+  // 自定义布局的数据
+  const layoutConfig = getForceLayoutConfig(graph, largeGraphMode)
+  // console.log('layoutConfig', layoutConfig)
+  // console.log('layout', layout)
+  layoutConfig.center = [CANVAS_WIDTH / 2, CANVAS_HEIGHT / 3]
+  layout.instance = new G6.Layout.gForce(layoutConfig)
+  layout.instance.init({
+    nodes: currentUnproccessedData.nodes,
+    edges: processedEdges
+  })
+  // layout.instance.animate = false
+  layout.instance.execute()
+  bindListener(graph)
+  // console.log(aggregatedData)
+  // console.log(processedEdges)
+  graph.data({ nodes: aggregatedData.nodes, edges: processedEdges })
+  graph.render()
+})
+
 if (typeof window !== 'undefined') {
   window.onresize = () => {
     if (!graph || graph.get('destroyed')) return
@@ -1683,89 +1693,10 @@ if (typeof window !== 'undefined') {
     graph.changeSize(container.scrollWidth, container.scrollHeight - 30)
   }
 }
-
-// const props = defineProps({
-//   foo: {
-//     type: String,
-//     required: false,
-//     default: ''
-//   }
-// })
-// const emits = defineEmits(['change', 'delete'])
-
-// const store = useStore()
-// const route = useRoute()
-// const router = useRouter()
-// const tc = i18n.global.tc
-// const data = {
-//   nodes: [
-//     {
-//       id: 'node_1',
-//       label: 'node-1',
-//       type: 'rect',
-//       x: 100,
-//       y: 200,
-//       size: [50, 25],
-//       style: {
-//         fill: '#0f0',
-//         lineWith: 5,
-//         fillOpacity: 0.4,
-//         strokeOpacity: 0.8
-//       }
-//     },
-//     {
-//       id: 'node_2',
-//       label: 'node-2',
-//       labelCfg: {
-//         position: 'bottom',
-//         style: {
-//           fill: '#00f',
-//           fontWeight: 500,
-//           textAlign: 'left'
-//         }
-//       }
-//     },
-//     {
-//       id: 'node_3',
-//       label: 'node-3'
-//     }
-//   ],
-//   edges: [
-//     {
-//       source: 'node_1',
-//       target: 'node_2',
-//       style: {
-//         startArrow: true,
-//         endArrow: true
-//       }
-//     },
-//     {
-//       source: 'node_2',
-//       target: 'node_3'
-//     },
-//     {
-//       source: 'node_3',
-//       target: 'node_1'
-//     }
-//   ]
-// }
-// const container: any = ref(null)
-onMounted(() => {
-  // const width = container.value.scrollWidth
-  // const height = container.value.scrollHeight || 500
-  // const graph = new G6.Graph({
-  //   container: 'myContainer',
-  //   width: 800,
-  //   height: 500
-  // })
-  // graph.data(data)
-  // graph.render()
-})
 </script>
 
 <template>
   <div class="ExportIndex" style="width: 100%">
-    <!--    <div id="container"></div>-->
     <div ref="container" id="container" style="width:100%;height:100vh;overflow: scroll;"></div>
   </div>
 </template>
