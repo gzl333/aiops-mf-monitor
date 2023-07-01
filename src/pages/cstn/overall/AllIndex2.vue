@@ -8,7 +8,7 @@ import { onMounted } from 'vue'
 import G6 from '@antv/g6'
 import { insertCss } from 'insert-css'
 import { isNumber, isArray } from '@antv/util'
-import { mapData, nodeMapData } from 'assets/topology/topologyData'
+import { mapData } from "assets/topology/topologyData"
 
 insertCss(`
   .g6-component-contextmenu {
@@ -197,7 +197,7 @@ const processNodesEdges = (nodes, edges, width, height, largeGraphMode, edgeLabe
   nodes.forEach((node) => {
     node.type = node.level === 0 ? 'real-node' : 'aggregated-node'
     node.isReal = node.level === 0
-    node.label = `${node.label}`
+    node.label = `${node.id}`
     node.labelLineNum = undefined
     node.oriLabel = node.label
     node.label = formatText(node.label, labelMaxLength, '...')
@@ -286,6 +286,7 @@ const processNodesEdges = (nodes, edges, width, height, largeGraphMode, edgeLabe
   edges.forEach((edge) => {
     // set edges' style
     const targetNode = currentNodeMap[edge.target]
+
     const size = ((edge.count - minCount) / countRange) * edgeSizeRange + minEdgeSize || 1
     edge.size = size
 
@@ -318,11 +319,11 @@ const processNodesEdges = (nodes, edges, width, height, largeGraphMode, edgeLabe
       lineDash,
       endArrow: arrowPath
         ? {
-            path: arrowPath,
-            d,
-            fill: stroke,
-            strokeOpacity: 0
-          }
+          path: arrowPath,
+          d,
+          fill: stroke,
+          strokeOpacity: 0
+        }
         : false
     }
     edge.labelCfg = {
@@ -548,10 +549,16 @@ const handleRefreshGraph = (graph, graphData, width, height, largeGraphMode, edg
 }
 
 const getMixedGraph = (aggregatedData, originData, nodeMap, aggregatedNodeMap, expandArray, collapseArray) => {
+  console.log(aggregatedData)
+  console.log(originData)
+  console.log(nodeMap)
+  console.log(aggregatedNodeMap)
+  console.log(expandArray)
   let nodes = []
   const edges = []
 
-  const expandMap = {}, collapseMap = {}
+  const expandMap = {},
+    collapseMap = {}
   expandArray.forEach((expandModel) => {
     expandMap[expandModel.id] = true
   })
@@ -568,13 +575,8 @@ const getMixedGraph = (aggregatedData, originData, nodeMap, aggregatedNodeMap, e
       aggregatedNodeMap[cluster.id].expanded = false
     }
   })
-  console.log('originData', originData)
-  console.log('expandMap', expandMap)
-  console.log('nodeMap', nodeMap)
   originData.edges.forEach((edge) => {
-    console.log('edge', edge.target)
-    console.log(nodeMap[edge.target])
-    console.log(expandMap[nodeMap[edge.target]].clusterId)
+    console.log(expandMap[nodeMap[edge.target].clusterId])
     const isSourceInExpandArray = expandMap[nodeMap[edge.source].clusterId]
     const isTargetInExpandArray = expandMap[nodeMap[edge.target].clusterId]
     if (isSourceInExpandArray && isTargetInExpandArray) {
@@ -601,7 +603,7 @@ const getMixedGraph = (aggregatedData, originData, nodeMap, aggregatedNodeMap, e
   })
   aggregatedData.clusterEdges.forEach((edge) => {
     if (expandMap[edge.source] || expandMap[edge.target]) {
-
+      return
     } else {
       edges.push(edge)
     }
@@ -921,7 +923,8 @@ onMounted(() => {
     'aggregated-node',
     {
       draw (cfg, group) {
-        const width = 140, height = 40
+        // console.log('cfg1', cfg)
+        const width = 53, height = 27
         const style = cfg.style || {}
         const colorSet = cfg.colorSet || colorSets[0]
 
@@ -981,13 +984,13 @@ onMounted(() => {
         }
         group.addShape('text', {
           attrs: {
-            text: `${cfg.label + '--' + cfg.count}`,
+            text: `${cfg.count + '---' + cfg.label}`,
             x: 0,
             y: 0,
             textAlign: 'center',
             textBaseline: 'middle',
             cursor: 'pointer',
-            fontSize: 16,
+            fontSize: 12,
             fill: '#fff',
             opacity: 0.85,
             fontWeight: 400
@@ -1055,6 +1058,7 @@ onMounted(() => {
     'real-node',
     {
       draw (cfg, group) {
+        // console.log('cfg2', cfg)
         let r = 30
         if (isNumber(cfg.size)) {
           r = cfg.size / 2
@@ -1304,267 +1308,131 @@ onMounted(() => {
   )
 
   // Custom the line edge for single edge between one node pair
-  G6.registerEdge(
-    'custom-line',
-    {
-      setState: (name, value, item) => {
-        const group = item.get('group')
-        const model = item.getModel()
-        if (name === 'focus') {
-          const keyShape = group.find((ele) => ele.get('name') === 'edge-shape')
-          const back = group.find((ele) => ele.get('name') === 'back-line')
-          if (back) {
-            back.stopAnimate()
-            back.remove()
-            back.destroy()
-          }
-          const arrow = model.style.endArrow
-          if (value) {
-            if (keyShape.cfg.animation) {
-              keyShape.stopAnimate(true)
-            }
-            keyShape.attr({
-              strokeOpacity: animateOpacity,
-              opacity: animateOpacity,
-              stroke: '#fff',
-              endArrow: {
-                ...arrow,
-                stroke: '#fff',
-                fill: '#fff'
-              }
-            })
-            if (model.isReal) {
-              const { path, stroke, lineWidth } = keyShape.attr()
-              const back = group.addShape('path', {
-                attrs: {
-                  path,
-                  stroke,
-                  lineWidth,
-                  opacity: animateBackOpacity
-                },
-                name: 'back-line'
-              })
-              back.toBack()
-              const length = keyShape.getTotalLength()
-              keyShape.animate(
-                (ratio) => {
-                  // the operations in each frame. Ratio ranges from 0 to 1 indicating the prograss of the animation. Returns the modified configurations
-                  const startLen = ratio * length
-                  // Calculate the lineDash
-                  const cfg = {
-                    lineDash: [startLen, length - startLen]
-                  }
-                  return cfg
-                },
-                {
-                  repeat: true, // Whether executes the animation repeatly
-                  duration // the duration for executing once
-                }
-              )
-            } else {
-              const lineDash = keyShape.attr('lineDash')
-              const totalLength = lineDash[0] + lineDash[1]
-              let index = 0
-              keyShape.animate(
-                () => {
-                  index++
-                  if (index > totalLength) {
-                    index = 0
-                  }
-                  const res = {
-                    lineDash,
-                    lineDashOffset: -index
-                  }
-                  // returns the modified configurations here, lineDash and lineDashOffset here
-                  return res
-                },
-                {
-                  repeat: true, // whether executes the animation repeatly
-                  duration // the duration for executing once
-                }
-              )
-            }
-          } else {
-            keyShape.stopAnimate()
-            const stroke = '#acaeaf'
-            const opacity = model.isReal ? realEdgeOpacity : virtualEdgeOpacity
-            keyShape.attr({
-              stroke,
-              strokeOpacity: opacity,
-              opacity,
-              endArrow: {
-                ...arrow,
-                stroke,
-                fill: stroke
-              }
-            })
-          }
-        }
-      }
-    },
-    'single-edge'
-  )
+  // G6.registerEdge(
+  //   'custom-line',
+  //   {
+  //     setState: (name, value, item) => {
+  //       const group = item.get('group')
+  //       const model = item.getModel()
+  //       if (name === 'focus') {
+  //         const keyShape = group.find((ele) => ele.get('name') === 'edge-shape')
+  //         const back = group.find((ele) => ele.get('name') === 'back-line')
+  //         if (back) {
+  //           back.stopAnimate()
+  //           back.remove()
+  //           back.destroy()
+  //         }
+  //         const arrow = model.style.endArrow
+  //         if (value) {
+  //           if (keyShape.cfg.animation) {
+  //             keyShape.stopAnimate(true)
+  //           }
+  //           keyShape.attr({
+  //             strokeOpacity: animateOpacity,
+  //             opacity: animateOpacity,
+  //             stroke: '#fff',
+  //             endArrow: {
+  //               ...arrow,
+  //               stroke: '#fff',
+  //               fill: '#fff'
+  //             }
+  //           })
+  //           if (model.isReal) {
+  //             const { path, stroke, lineWidth } = keyShape.attr()
+  //             const back = group.addShape('path', {
+  //               attrs: {
+  //                 path,
+  //                 stroke,
+  //                 lineWidth,
+  //                 opacity: animateBackOpacity
+  //               },
+  //               name: 'back-line'
+  //             })
+  //             back.toBack()
+  //             const length = keyShape.getTotalLength()
+  //             keyShape.animate(
+  //               (ratio) => {
+  //                 // the operations in each frame. Ratio ranges from 0 to 1 indicating the prograss of the animation. Returns the modified configurations
+  //                 const startLen = ratio * length
+  //                 // Calculate the lineDash
+  //                 const cfg = {
+  //                   lineDash: [startLen, length - startLen]
+  //                 }
+  //                 return cfg
+  //               },
+  //               {
+  //                 repeat: true, // Whether executes the animation repeatly
+  //                 duration // the duration for executing once
+  //               }
+  //             )
+  //           } else {
+  //             const lineDash = keyShape.attr('lineDash')
+  //             const totalLength = lineDash[0] + lineDash[1]
+  //             let index = 0
+  //             keyShape.animate(
+  //               () => {
+  //                 index++
+  //                 if (index > totalLength) {
+  //                   index = 0
+  //                 }
+  //                 const res = {
+  //                   lineDash,
+  //                   lineDashOffset: -index
+  //                 }
+  //                 // returns the modified configurations here, lineDash and lineDashOffset here
+  //                 return res
+  //               },
+  //               {
+  //                 repeat: true, // whether executes the animation repeatly
+  //                 duration // the duration for executing once
+  //               }
+  //             )
+  //           }
+  //         } else {
+  //           keyShape.stopAnimate()
+  //           const stroke = '#acaeaf'
+  //           const opacity = model.isReal ? realEdgeOpacity : virtualEdgeOpacity
+  //           keyShape.attr({
+  //             stroke,
+  //             strokeOpacity: opacity,
+  //             opacity,
+  //             endArrow: {
+  //               ...arrow,
+  //               stroke,
+  //               fill: stroke
+  //             }
+  //           })
+  //         }
+  //       }
+  //     }
+  //   },
+  //   'single-edge'
+  // )
+//   fetch('https://gw.alipayobjects.com/os/antvdemo/assets/data/relations.json').then((res) => res.json()).then((data) => {
+//
+// })
   const container = document.getElementById('container')
+  // const descriptionDiv = document.createElement('div')
+  // descriptionDiv.innerHTML = `<a href='/en/largegraph' target='_blanck'>Click【HERE】To Full Demo</a>
+  //   <br/>
+  //   <a href='/zh/largegraph' target='_blanck'>点击【这里】进入完整 Demo</a>`
+  // descriptionDiv.style.textAlign = 'right'
+  // descriptionDiv.style.color = '#fff'
+  // descriptionDiv.style.position = 'absolute'
+  // descriptionDiv.style.right = '32px'
+  // descriptionDiv.style.marginTop = '8px'
+  // container.appendChild(descriptionDiv)
+
   container.style.backgroundColor = '#2b2f33'
+
   CANVAS_WIDTH = container.scrollWidth
   CANVAS_HEIGHT = (container.scrollHeight || 500) - 30
   // 存储的是第二级的所有节点
   nodeMap = {}
   // 将数据信息data聚合
-  // const clusteredData = {
-  //   clusterEdges: [
-  //     { source: '1', target: '2', weight: 2, count: 2 },
-  //     { source: '1', target: '3', weight: 2, count: 2 },
-  //     { source: '4', target: '5', weight: 1, count: 1 },
-  //     { source: '4', target: '6', weight: 1, count: 1 },
-  //     // { source: '3', target: '2', weight: 1, count: 1 },
-  //     // { source: '3', target: '3', weight: 15,  count: 15 }
-  //     // { count: 60, source: '10', target: '10', weight: 60 },
-  //     // { count: 3, source: '10', target: '1', weight: 3 },
-  //     // { count: 4, source: '2', target: '10', weight: 4 },
-  //     // { count: 4, source: '10', target: '2', weight: 4 },
-  //     // { count: 3, source: '4', target: '10', weight: 3 },
-  //     // { count: 7, source: '3', target: '10', weight: 7 },
-  //     // { count: 1, source: '6', target: '10', weight: 1 },
-  //     // { count: 1, source: '8', target: '6', weight: 1 },
-  //     // { count: 12, source: '8', target: '10', weight: 12 },
-  //     // { count: 6, source: '7', target: '10', weight: 6 },
-  //     // { count: 6, source: '7', target: '7', weight: 6 },
-  //     // { count: 1, source: '6', target: '7', weight: 1 },
-  //     // { count: 1, source: '6', target: '6', weight: 1 },
-  //     // { count: 3, source: '8', target: '7', weight: 3 },
-  //     // { count: 1, source: '8', target: '6', weight: 1 },
-  //     // { count: 1, source: '8', target: '2', weight: 1 },
-  //     // { count: 70, source: '8', target: '8', weight: 70 },
-  //     // { count: 1, source: '7', target: '8', weight: 1 },
-  //     // { count: 5, source: '10', target: '8', weight: 5 },
-  //     // { count: 2, source: '9', target: '8', weight: 2 },
-  //     // { count: 1, source: '9', target: '9', weight: 1 }
-  //   ],
-  //   clusters: [
-  //     {
-  //       id: '1',
-  //       label: '国际出口',
-  //       nodes: []
-  //     },
-  //     {
-  //       id: '2',
-  //       label: '软件园接入',
-  //       nodes: [
-  //         { id: 'Listolier', clusterId: '2' },
-  //         { id: 'Blacheville', clusterId: '2' },
-  //         { id: 'Favourite', clusterId: '2' },
-  //         { id: 'Dahlia', clusterId: '2' },
-  //         { id: 'Zephine', clusterId: '2' },
-  //         { id: 'Fantine', clusterId: '2' },
-  //         { id: 'Marguerite', clusterId: '2' },
-  //         { id: 'Tholomyes', clusterId: '2' },
-  //         { id: 'Fameuil', clusterId: '2' },
-  //         { id: 'Perpetue', clusterId: '2' },
-  //         { id: 'Simplice', clusterId: '2' },
-  //         { id: 'Simplice1', clusterId: '2' }
-  //       ]
-  //     },
-  //     {
-  //       id: '3',
-  //       label: '软件园核心',
-  //       nodes: [
-  //         { id: 'Judge', clusterId: '3' },
-  //         { id: 'Brevet', clusterId: '3' },
-  //         { id: 'Chenildieu', clusterId: '3' },
-  //         { id: 'Cochepaille', clusterId: '3' }
-  //       ]
-  //     },
-  //     {
-  //       id: '4',
-  //       label: '国内出口',
-  //       nodes: []
-  //     },
-  //     {
-  //       id: '5',
-  //       label: '信息化大厦核心',
-  //       nodes: [
-  //         { id: 'Mme.Burgon', clusterId: '5' },
-  //         { id: 'Jondrette', clusterId: '5' }
-  //       ]
-  //     },
-  //     {
-  //       id: '6',
-  //       label: '怀柔核心',
-  //       nodes: [
-  //         { id: 'Mme.Pontmercy', clusterId: '6' }
-  //       ]
-  //     }
-  //
-  //     // {
-  //     //   id: '7',
-  //     //   nodes: [
-  //     //     { id: 'BaronessT', clusterId: '7' },
-  //     //     { id: 'Gillenormand', clusterId: '7' },
-  //     //     { id: 'Magnon', clusterId: '7' },
-  //     //     { id: 'Lt.Gillenormand', clusterId: '7' },
-  //     //     { id: 'Mlle.Gillenormand', clusterId: '7' },
-  //     //     { id: 'Mlle.Vaubois', clusterId: '7' }
-  //     //   ]
-  //     // },
-  //     // {
-  //     //   id: '8',
-  //     //   nodes: [
-  //     //     { id: 'Grantaire', clusterId: '8' },
-  //     //     { id: 'Prouvaire', clusterId: '8' },
-  //     //     { id: 'Feuilly', clusterId: '8' },
-  //     //     { id: 'Courfeyrac', clusterId: '8' },
-  //     //     { id: 'Bahorel', clusterId: '8' },
-  //     //     { id: 'Bossuet', clusterId: '8' },
-  //     //     { id: 'Joly', clusterId: '8' },
-  //     //     { id: 'Mme.Hucheloup', clusterId: '8' },
-  //     //     { id: 'Gavroche', clusterId: '8' },
-  //     //     { id: 'Marius', clusterId: '8' },
-  //     //     { id: 'Mabeuf', clusterId: '8' },
-  //     //     { id: 'Enjolras', clusterId: '8' },
-  //     //     { id: 'Combeferre', clusterId: '8' },
-  //     //     { id: 'MotherPlutarch', clusterId: '8' }
-  //     //   ]
-  //     // },
-  //     // {
-  //     //   id: '9',
-  //     //   nodes: [
-  //     //     { id: 'Child2', clusterId: '9' },
-  //     //     { id: 'Child1', clusterId: '9' }
-  //     //   ]
-  //     // },
-  //     // {
-  //     //   id: '10',
-  //     //   nodes: [
-  //     //     { id: 'Brujon', clusterId: '10' },
-  //     //     { id: 'Gueulemer', clusterId: '10' },
-  //     //     { id: 'Babet', clusterId: '10' },
-  //     //     { id: 'Claquesous', clusterId: '10' },
-  //     //     { id: 'Montparnasse', clusterId: '10' },
-  //     //     { id: 'Mme.Thenardier', clusterId: '10' },
-  //     //     { id: 'Thenardier', clusterId: '10' },
-  //     //     { id: 'Javert', clusterId: '10' },
-  //     //     { id: 'Boulatruelle', clusterId: '10' },
-  //     //     { id: 'Eponine', clusterId: '10' },
-  //     //     { id: 'Anzelma', clusterId: '10' },
-  //     //     { id: 'Cosette', clusterId: '10' },
-  //     //     { id: 'Woman2', clusterId: '10' },
-  //     //     { id: 'Toussaint', clusterId: '10' },
-  //     //     { id: 'Valjean', clusterId: '10' },
-  //     //     { id: 'Mme.deR', clusterId: '10' },
-  //     //     { id: 'Isabeau', clusterId: '10' },
-  //     //     { id: 'Gervais', clusterId: '10' },
-  //     //     { id: 'Scaufflaire', clusterId: '10' },
-  //     //     { id: 'Woman1', clusterId: '10' },
-  //     //     { id: 'Labarre', clusterId: '10' }
-  //     //   ]
-  //     // }
-  //   ]
-  // }
   const clusteredData = louvain(mapData, false, 'weight')
   // 存储第一级几点以及连线信息
   const aggregatedData = { nodes: [], edges: [] }
-  console.log('clusteredData', clusteredData)
   // 子节点从这段代码遍历出来
   clusteredData.clusters.forEach((cluster, i) => {
     cluster.nodes.forEach((node) => {
@@ -1579,7 +1447,7 @@ onMounted(() => {
       type: 'aggregated-node',
       count: cluster.nodes.length,
       level: 1,
-      label: cluster.label,
+      label: cluster.id,
       colorSet: colorSets[i],
       idx: i
     }
@@ -1648,7 +1516,8 @@ onMounted(() => {
               <li id='hide'>隐藏该节点</li>
             </ul>`
           }
-        } else {
+        }
+        else {
           return ''
           //   return `<ul>
           //   <li id='hide'>Hide the Edge</li>
@@ -1811,8 +1680,8 @@ onMounted(() => {
   // layout.instance.animate = false
   layout.instance.execute()
   bindListener(graph)
-  console.log(aggregatedData)
-  console.log(processedEdges)
+  // console.log(aggregatedData)
+  // console.log(processedEdges)
   graph.data({ nodes: aggregatedData.nodes, edges: processedEdges })
   graph.render()
 })
