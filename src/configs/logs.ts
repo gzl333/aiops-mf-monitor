@@ -1,6 +1,26 @@
 // 更新日志内容，版本降序排列
 export const logs = [
   {
+    version: 'v0.3.0',
+    date: '2023-07-01',
+    time: '17:20:21',
+    release_author: 'duyukuan',
+    updates: [
+      {
+        info: '上线中国科技网全局拓扑图第一版基本样式',
+        commit_author: 'duyukuan'
+      },
+      {
+        info: '全局页面表格修改',
+        commit_author: '郑玮蓁'
+      },
+      {
+        info: '全局页及任务详情页接口上线',
+        commit_author: '郑玮蓁'
+      }
+    ]
+  },
+  {
     version: 'v0.2.3',
     date: '2023-06-29',
     time: '17:13:35',

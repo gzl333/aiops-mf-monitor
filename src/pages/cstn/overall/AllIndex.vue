@@ -130,6 +130,71 @@ const global = {
   }
 }
 
+// 将数据信息data聚合
+const clusteredData = {
+  clusterEdges: [
+    { source: '1', target: '2', weight: 1, count: 1 },
+    { source: '1', target: '3', weight: 1, count: 1 },
+    { source: '4', target: '5', weight: 2, count: 2 },
+    { source: '4', target: '6', weight: 2, count: 2 }
+  ],
+  clusters: [
+    {
+      id: '1',
+      label: '国际出口',
+      nodes: []
+    },
+    {
+      id: '2',
+      label: '软件园接入',
+      nodes: [
+        { id: 'SoftwareAccess-1', clusterId: '2', label: '软件园接入1' },
+        { id: 'SoftwareAccess-2', clusterId: '2', label: '软件园接入2' },
+        { id: 'SoftwareAccess-3', clusterId: '2', label: '软件园接入3' },
+        { id: 'SoftwareAccess-4', clusterId: '2', label: '软件园接入4' },
+        { id: 'SoftwareAccess-5', clusterId: '2', label: '软件园接入5' },
+        { id: 'SoftwareAccess-6', clusterId: '2', label: '软件园接入6' },
+        { id: 'SoftwareAccess-7', clusterId: '2', label: '软件园接入7' },
+        { id: 'SoftwareAccess-8', clusterId: '2', label: '软件园接入8' },
+        { id: 'SoftwareAccess-9', clusterId: '2', label: '软件园接入9' },
+        { id: 'SoftwareAccess-10', clusterId: '2', label: '软件园接入10' },
+        { id: 'SoftwareAccess-11', clusterId: '2', label: '软件园接入11' },
+        { id: 'SoftwareAccess-12', clusterId: '2', label: '软件园接入12' }
+      ]
+    },
+    {
+      id: '3',
+      label: '软件园核心',
+      nodes: [
+        { id: 'SoftwareCore-1', clusterId: '3', label: '软件园核心1' },
+        { id: 'SoftwareCore-2', clusterId: '3', label: '软件园核心2' },
+        { id: 'SoftwareCore-3', clusterId: '3', label: '软件园核心3' },
+        { id: 'SoftwareCore-4', clusterId: '3', label: '软件园核心4' }
+      ]
+    },
+    {
+      id: '4',
+      label: '国内出口',
+      nodes: []
+    },
+    {
+      id: '5',
+      label: '信息化大厦核心',
+      nodes: [
+        { id: 'CnicCore-1', clusterId: '5', label: '信息化大厦核心1' },
+        { id: 'CnicCore-2', clusterId: '5', label: '信息化大厦核心2' }
+      ]
+    },
+    {
+      id: '6',
+      label: '怀柔核心',
+      nodes: [
+        { id: 'HuairouCore-1', clusterId: '6', label: '怀柔核心1' }
+      ]
+    }
+  ]
+}
+
 const descendCompare = (p: string) => {
   // 这是比较函数
   return function (m, n) {
@@ -906,6 +971,8 @@ onMounted(() => {
     'aggregated-node',
     {
       draw (cfg, group) {
+        // console.log(cfg)
+        // console.log(group)
         const width = 140, height = 40
         const style = cfg.style || {}
         const colorSet = cfg.colorSet || colorSets[0]
@@ -966,7 +1033,7 @@ onMounted(() => {
         }
         group.addShape('text', {
           attrs: {
-            text: `${cfg.label + '--' + cfg.count}`,
+            text: `${cfg.label + '-' + cfg.count}`,
             x: 0,
             y: 0,
             textAlign: 'center',
@@ -1395,70 +1462,6 @@ onMounted(() => {
   CANVAS_HEIGHT = (container.scrollHeight || 500) - 30
   // 存储的是第二级的所有节点
   nodeMap = {}
-  // 将数据信息data聚合
-  const clusteredData = {
-    clusterEdges: [
-      { source: '1', target: '2', weight: 1, count: 1 },
-      { source: '1', target: '3', weight: 1, count: 1 },
-      { source: '4', target: '5', weight: 2, count: 2 },
-      { source: '4', target: '6', weight: 2, count: 2 }
-    ],
-    clusters: [
-      {
-        id: '1',
-        label: '国际出口',
-        nodes: []
-      },
-      {
-        id: '2',
-        label: '软件园接入',
-        nodes: [
-          { id: 'SoftwareAccess-1', clusterId: '2', label: '软件园接入1' },
-          { id: 'SoftwareAccess-2', clusterId: '2', label: '软件园接入2' },
-          { id: 'SoftwareAccess-3', clusterId: '2', label: '软件园接入3' },
-          { id: 'SoftwareAccess-4', clusterId: '2', label: '软件园接入4' },
-          { id: 'SoftwareAccess-5', clusterId: '2', label: '软件园接入5' },
-          { id: 'SoftwareAccess-6', clusterId: '2', label: '软件园接入6' },
-          { id: 'SoftwareAccess-7', clusterId: '2', label: '软件园接入7' },
-          { id: 'SoftwareAccess-8', clusterId: '2', label: '软件园接入8' },
-          { id: 'SoftwareAccess-9', clusterId: '2', label: '软件园接入9' },
-          { id: 'SoftwareAccess-10', clusterId: '2', label: '软件园接入10' },
-          { id: 'SoftwareAccess-11', clusterId: '2', label: '软件园接入11' },
-          { id: 'SoftwareAccess-12', clusterId: '2', label: '软件园接入12' }
-        ]
-      },
-      {
-        id: '3',
-        label: '软件园核心',
-        nodes: [
-          { id: 'SoftwareCore-1', clusterId: '3', label: '软件园核心1' },
-          { id: 'SoftwareCore-2', clusterId: '3', label: '软件园核心2' },
-          { id: 'SoftwareCore-3', clusterId: '3', label: '软件园核心3' },
-          { id: 'SoftwareCore-4', clusterId: '3', label: '软件园核心4' }
-        ]
-      },
-      {
-        id: '4',
-        label: '国内出口',
-        nodes: []
-      },
-      {
-        id: '5',
-        label: '信息化大厦核心',
-        nodes: [
-          { id: 'CnicCore-1', clusterId: '5', label: '信息化大厦核心1' },
-          { id: 'CnicCore-2', clusterId: '5', label: '信息化大厦核心2' }
-        ]
-      },
-      {
-        id: '6',
-        label: '怀柔核心',
-        nodes: [
-          { id: 'HuairouCore-1', clusterId: '6', label: '怀柔核心1' }
-        ]
-      }
-    ]
-  }
   // 存储第一级几点以及连线信息
   const aggregatedData = { nodes: [], edges: [] }
   // 子节点从这段代码遍历出来
