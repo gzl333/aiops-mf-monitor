@@ -35,6 +35,9 @@ import { i18n } from 'boot/i18n'
 //   '<50ms': number
 //   '>3s': number
 // }
+// const res = aiops.monitor.getWebsite()
+// console.log(res)
+
 interface delay_distribution_series {
   name: string
   type: string
@@ -377,7 +380,7 @@ const getDelayDistribution = () => {
 }
 watch(date1, (newValue, oldValue) => {
   // const bigger_time = date.formatDate(date2.value, 'X')
-  console.log(oldValue)
+  // console.log(oldValue)
   const unit = 'seconds'
   const now = date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm')
   let diff = date.getDateDiff(newValue, now, unit)
@@ -479,7 +482,7 @@ const getStatusRate = () => {
       }
       single_data.probe = '2'
       single_data.detail = '查看详情'
-      console.log(single_data)
+      // console.log(single_data)
       runtime_ref.value.push(single_data)
     }
   })

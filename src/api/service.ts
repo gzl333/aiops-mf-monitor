@@ -82,12 +82,6 @@ export default {
         params: payload.query
       }
       return axiosService.get('/monitor/website/' + payload.path.id + '/query', config)
-    },
-    getMonitorWebsiteQueryRange (payload: { query: { query: string, start: number, end?: number, step?: number, detection_point_id: string }, path: { id: string } }) {
-      const config = {
-        params: payload.query
-      }
-      return axiosService.get('/monitor/website/' + payload.path.id + '/query/range', config)
     }
   }
 }

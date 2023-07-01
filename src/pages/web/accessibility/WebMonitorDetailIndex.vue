@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useStore } from 'stores/store'
 import { useRoute, useRouter } from 'vue-router'
-import service from 'src/api/service'
+// import service from 'src/api/service'
 import { i18n } from 'boot/i18n'
 import { date, Notify } from 'quasar'
 import WebHistogramChart from 'components/Chart/WebHistogramChart.vue'
+import aiops from 'src/api/aiops'
 
 // const props = defineProps({
 //   foo: {
@@ -39,7 +40,8 @@ const store = useStore()
 const route = useRoute()
 const router = useRouter()
 const { tc } = i18n.global
-const detectionPoints = computed(() => store.getDetectionPointTable())
+// const arr1 = computed(() => store.getDetectionPointTable())
+const arr1 = [{ value: '1', label: '软件园区' }, { value: '2', label: '信息化大厦' }]
 const taskId = route.params.webMonitorTaskId as string
 const nowTime = new Date().getTime()
 // 请求起始时间戳
@@ -124,7 +126,7 @@ const calcMaxMin = (id: string, step: number) => {
 const getWebMonitoringData = async (detectId: string, name: string, start: number, step:number, index: number) => {
   // 先请求获取状态码，再去请求获取耗时，因为图表通过正负区分方向，状态码异常时需要 * -1，所以需要先获取状态码之后再去请求耗时
   // 固定30条数据，根据传入的步长请求数据
-  const statusResp = await service.monitor.getMonitorWebsiteQueryRange({ query: { query: 'http_status_code', start, detection_point_id: detectId, step }, path: { id: taskId } })
+  const statusResp = await aiops.monitor.getMonitorWebsiteQueryRange({ query: { query: 'http_status_code', start, probe_id: detectId, step }, path: { id: taskId } })
   // item.metric.monitor === 'example' 为后端出现坏数据时的条件判断，数据出现问题时返回数据中的monitor字段为‘example’
   if (statusResp.status === 200 && statusResp.data.length > 0 && statusResp.data.findIndex((item: WebMonitorInterface) => item.metric.monitor === 'example') === -1) {
     // 存放状态元组
@@ -148,7 +150,7 @@ const getWebMonitoringData = async (detectId: string, name: string, start: numbe
     })
     statusObj.value[detectId] = stagingStatusData
     // 获取总耗时
-    const durationTotalResp = await service.monitor.getMonitorWebsiteQueryRange({ query: { query: 'duration_seconds', start, detection_point_id: detectId, step }, path: { id: taskId } })
+    const durationTotalResp = await aiops.monitor.getMonitorWebsiteQueryRange({ query: { query: 'duration_seconds', start, probe_id: detectId, step }, path: { id: taskId } })
     if (durationTotalResp.status === 200 && durationTotalResp.data.length > 0) {
       let durationTotalData: [number, string][]
       const stagingTotalData: Array<[number, string]> = []
@@ -168,7 +170,7 @@ const getWebMonitoringData = async (detectId: string, name: string, start: numbe
       durationTotalArr[detectId] = stagingTotalData
     }
     // 获取各个阶段的耗时
-    const durationResp = await service.monitor.getMonitorWebsiteQueryRange({ query: { query: 'http_duration_seconds', start, detection_point_id: detectId, step }, path: { id: taskId } })
+    const durationResp = await aiops.monitor.getMonitorWebsiteQueryRange({ query: { query: 'http_duration_seconds', start, probe_id: detectId, step }, path: { id: taskId } })
     if (durationResp.status === 200 && durationResp.data.length > 0) {
       const sortDurationResp: WebMonitorInterface[] = []
       // 存放耗时数据数组
@@ -300,7 +302,7 @@ const getWebMonitoringData = async (detectId: string, name: string, start: numbe
 }
 // 每一分钟刷新获取数据方法
 const getWebMonitoringLastData = async (id: string, name: string, start: number) => {
-  const statusResp = await service.monitor.getMonitorWebsiteQueryRange({ query: { query: 'http_status_code', start, detection_point_id: id, step: 60 }, path: { id: taskId } })
+  const statusResp = await aiops.monitor.getMonitorWebsiteQueryRange({ query: { query: 'http_status_code', start, probe_id: id, step: 60 }, path: { id: taskId } })
   if (statusResp.status === 200) {
     if (statusResp.data.length > 0) {
       // 判断最新数据的时间是否等于当前数据的最后一条数据时间，一致的话则数据没有变化
@@ -320,7 +322,7 @@ const getWebMonitoringLastData = async (id: string, name: string, start: number)
     }
   }
   if (isHaveChange.value) {
-    const durationTotalResp = await service.monitor.getMonitorWebsiteQueryRange({ query: { query: 'duration_seconds', start, detection_point_id: id, step: 60 }, path: { id: taskId } })
+    const durationTotalResp = await aiops.monitor.getMonitorWebsiteQueryRange({ query: { query: 'duration_seconds', start, probe_id: id, step: 60 }, path: { id: taskId } })
     if (durationTotalResp.status === 200 && durationTotalResp.data.length > 0) {
       if (durationTotalArr[id]) {
         if (durationTotalArr[id].length >= 30) {
@@ -331,7 +333,7 @@ const getWebMonitoringLastData = async (id: string, name: string, start: number)
         durationTotalArr[id] = durationTotalResp.data[0].values[durationTotalResp.data[0].values.findIndex((item: [number, string]) => item[0] === lastTimeStamp + 60)]
       }
     }
-    const durationResp = await service.monitor.getMonitorWebsiteQueryRange({ query: { query: 'http_duration_seconds', start, detection_point_id: id, step: 60 }, path: { id: taskId } })
+    const durationResp = await aiops.monitor.getMonitorWebsiteQueryRange({ query: { query: 'http_duration_seconds', start, probe_id: id, step: 60 }, path: { id: taskId } })
     if (durationResp.status === 200 && durationResp.data.length > 0) {
       // eslint-disable-next-line
       chartSeries.value.forEach((bar: Record<string, any>) => {
@@ -375,7 +377,7 @@ let dynamicRefreshTimer: NodeJS.Timer | null = setInterval(() => {
 const refreshData = async () => {
   isHaveChange.value = false
   // echarts动态变化数据需要手动删除第一个元素，在数组末尾添加新元素
-  for (const detect of detectionPoints.value) {
+  for (const detect of arr1) {
     await getWebMonitoringLastData(detect.value, detect.label, lastTimeStamp)
   }
   lastTimeStamp += 60
@@ -406,7 +408,7 @@ const refreshData = async () => {
 }
 const refreshAll = async (time: number, step: number) => {
   getXAxis(time, step)
-  detectionPoints.value.forEach((item, index) => {
+  arr1.forEach((item, index) => {
     getWebMonitoringData(item.value, item.label, time, step, index)
   })
 }
@@ -471,18 +473,18 @@ const goBack = () => {
 //     renovateTime.value = 60
 //   }
 // })
-watch(detectionPoints, () => {
-  if (detectionPoints.value.length > 0) {
+watch(arr1, () => {
+  if (arr1.length > 0) {
     getXAxis(startTimeStamp, 60)
-    detectionPoints.value.forEach((item, index) => {
+    arr1.forEach((item, index) => {
       getWebMonitoringData(item.value, item.label, startTimeStamp, 60, index)
     })
   }
 })
 onMounted(() => {
-  if (detectionPoints.value.length > 0) {
+  if (arr1.length > 0) {
     getXAxis(startTimeStamp, 60)
-    detectionPoints.value.forEach((item, index) => {
+    arr1.forEach((item, index) => {
       getWebMonitoringData(item.value, item.label, startTimeStamp, 60, index)
     })
   }
@@ -521,7 +523,7 @@ onUnmounted(() => {
     </div>
     <div class="row justify-between items-center">
       <div class="q-py-md">
-        <div v-for="(item, index) in detectionPoints" :key="item.value">{{ `${tc('探针')}${index + 1}：${ i18n.global.locale === 'zh' ? item.label : item.labelEn}` }}</div>
+        <div v-for="(item, index) in arr1" :key="item.value">{{ `${tc('探针')}${index + 1}：${ i18n.global.locale === 'zh' ? item.label : item.labelEn}` }}</div>
       </div>
       <div class="row items-center" v-show="isCurrent">
         <div class="text-grey-7 q-mr-md">{{ tc('剩余更新时间') }}</div>

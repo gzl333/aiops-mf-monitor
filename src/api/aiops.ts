@@ -130,7 +130,23 @@ export default {
         params: payload?.query
       }
       return axiosAiops.get('v1/monitor/distribution/', configs)
+    },
+    getWebsite () {
+      return axiosAiops.get('v1/monitor/website/')
+    },
+    getWebsiteDetail (payload: {query: {
+        website_id?: string
+      }}) {
+      const configs = {
+        params: payload?.query
+      }
+      return axiosAiops.get('v1/monitor/distribution/', configs)
+    },
+    getMonitorWebsiteQueryRange (payload: { query: { query: string, start: number, end?: number, step?: number, probe_id: string }, path: { id: string } }) {
+      const config = {
+        params: payload.query
+      }
+      return axiosAiops.get('v1/monitor/website/' + payload.path.id + '/query/range', config)
     }
-
   }
 }

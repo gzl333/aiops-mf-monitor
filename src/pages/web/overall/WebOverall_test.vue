@@ -5,7 +5,7 @@ import PieChart from 'components/chart/PieChart.vue'
 import { navigateToUrl } from 'single-spa'
 import { date } from 'quasar'
 import { i18n } from 'boot/i18n'
-import { useStore } from 'stores/store'
+// import { useStore } from 'stores/store'
 import $bus from 'src/hooks/bus'
 import aiops from 'src/api/aiops'
 
@@ -14,7 +14,17 @@ interface distributionData {
   name: string
   // color: string
 }
-
+interface allMissionlist {
+  id: string
+  mission_name: string
+  mission_url: string
+  mission_remark: string
+  mission_created: string
+  // mission_status: string
+  // mission_delay: number
+  // probe: string
+  // detail: string
+}
 const date2 = ref(date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm'))
 const date1 = ref(date.formatDate(Date.now() - 300, 'YYYY-MM-DD HH:mm'))
 const standard = ref({
@@ -25,17 +35,17 @@ const text = ref('')
 const expanded = ref(false)
 
 const tc = i18n.global.tc
-const columns1 = computed(() => [
-  { name: 'id', label: (() => tc('任务id'))(), align: 'center', field: 'id' },
-  { name: 'name', label: (() => tc('任务名称'))(), align: 'center', field: 'name' },
-  { name: 'url', label: (() => tc('监控url'))(), align: 'center', field: 'url' },
-  { name: 'remark', label: (() => tc('备注'))(), align: 'center', field: 'remark' },
-  { name: 'creation', label: (() => tc('创建时间'))(), align: 'center', field: 'creation' },
-  { name: 'operation', label: (() => tc('操作'))(), field: 'operation', align: 'center' }
-])
-const store = useStore()
-const webMonitorTaskRow = computed(() => store.getWebMonitorTaskTable())
-const isLoad = ref(false)
+// const columns1 = computed(() => [
+//   { name: 'id', label: (() => tc('任务id'))(), align: 'center', field: 'id' },
+//   { name: 'name', label: (() => tc('任务名称'))(), align: 'center', field: 'name' },
+//   { name: 'url', label: (() => tc('监控url'))(), align: 'center', field: 'url' },
+//   { name: 'remark', label: (() => tc('备注'))(), align: 'center', field: 'remark' },
+//   { name: 'creation', label: (() => tc('创建时间'))(), align: 'center', field: 'creation' },
+//   { name: 'operation', label: (() => tc('操作'))(), field: 'operation', align: 'center' }
+// ])
+// const store = useStore()
+// const webMonitorTaskRow = computed(() => store.getWebMonitorTaskTable())
+// const isLoad = ref(false)
 
 const dataOption = computed(() => ({
   title: {
@@ -110,6 +120,46 @@ const dataOption = computed(() => ({
   ]
 })) // 嵌套饼环图
 
+const allMissionColumns = [
+  { name: 'id', label: '任务id', align: 'center', field: 'id' },
+  { name: 'mission_name', align: 'center', label: '任务名称', field: 'mission_name', sortable: true },
+  { name: 'mission_url', align: 'center', label: '任务链接', field: 'mission_url', sortable: true },
+  { name: 'mission_remark', align: 'center', label: '备注', field: 'mission_url', sortable: true },
+  { name: 'mission_created', align: 'center', label: '创建时间', field: 'mission_url', sortable: true }
+  // { name: 'mission_status', align: 'center', label: '任务状态', field: 'mission_status', sortable: true, sort: (a, b) => compareStatus(a, b) },
+  // { name: 'mission_delay', align: 'center', label: '任务延时(ms)', field: 'mission_delay', sortable: true, sort: (a, b) => compareStatus1(a, b) },
+  // { name: 'probe', align: 'center', label: '探测节点', field: 'probe', sortable: true }
+]
+const allMissionRef = ref<allMissionlist[]>([])
+const allMissionRows = allMissionRef
+const pagination = ref({
+  page: 1,
+  rowsPerPage: 20
+})
+
+const getWebsite = () => {
+  allMissionRef.value = []
+  aiops.monitor.getWebsite().then((res) => {
+    // console.log(res)
+    for (const resKey in res.data.results) {
+      const single_data: allMissionlist = {
+        id: '',
+        mission_name: '',
+        mission_url: '',
+        mission_remark: '',
+        mission_created: ''
+      }
+      single_data.id = res.data.results[resKey].id
+      single_data.mission_name = res.data.results[resKey].name
+      single_data.mission_url = res.data.results[resKey].hostname
+      single_data.mission_remark = res.data.results[resKey].remark
+      single_data.mission_created = date.formatDate(res.data.results[resKey].creation, 'YYYY-MM-DD HH:mm:ss')
+      allMissionRef.value.push(single_data)
+    }
+    // console.log('hello')
+  })
+}
+
 const typeselect = ref('探针1')
 const model_option_search = ref('探针1')
 const model_option_type_search = ref(null)
@@ -179,6 +229,19 @@ $bus.on('mission_select', msg => {
   }
 })
 
+// function compareStatus (a, b) {
+//   if (a === b) return 0
+//   if (a === '异常') return -1
+//   if (b === '异常') return 1
+//   if (a === '高延迟') return -1
+//   if (b === '高延迟') return 1
+// }
+// function compareStatus1 (a, b) {
+//   if (a > b) return 1
+//   if (a === b) return 0
+//   if (a < b) return -1
+// }
+
 const distributionTypeData = ref<distributionData[]>([])
 const distributionDelayData = ref<distributionData[]>([])
 const getDistribution = () => {
@@ -236,7 +299,7 @@ const funTmp = () => {
 
 watch(date1, (newValue, oldValue) => {
   // const bigger_time = date.formatDate(date2.value, 'X')
-  console.log(oldValue)
+  // console.log(oldValue)
   const unit = 'seconds'
   const now = date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm')
   let diff = date.getDateDiff(newValue, now, unit)
@@ -274,6 +337,7 @@ watch(date2, async (newValue, oldValue) => {
   // console.log(diff)
 })
 getDistribution()
+getWebsite()
 </script>
 
 <template>
@@ -383,18 +447,19 @@ getDistribution()
               </div>
             </div>
           </div>
-          <div>
+          <div class="row">
             <q-table
               flat
               class="col"
               table-header-class="bg-grey-1 text-grey"
-              :rows="webMonitorTaskRow"
-              :columns="columns1"
-              :loading="isLoad"
-              row-key="name"
+              title="实时监控任务结果"
               color="primary"
+              :rows="allMissionRows"
               :loading-label="tc('notifyLoading')"
               :no-data-label="tc('noData')"
+              :columns="allMissionColumns"
+              row-key="name"
+              v-model:pagination=pagination
             >
               <template v-slot:body="props">
                 <q-tr :props="props">
@@ -402,31 +467,70 @@ getDistribution()
                     <q-btn no-caps flat color="primary" :label="tc('查看详情')" @click="navigateToUrl(`/my/monitor/web/detail/${props.row.id}`)"/>
                     <span>{{ props.row.id }}</span>
                   </q-td>
-                  <q-td key="name" :props="props" class="no-padding">
-                    {{ props.row.name }}
+                  <q-td key="mission_name" :props="props" class="no-padding">
+<!--                    <q-btn no-caps flat color="primary" :label="tc('查看详情')" @click="navigateToUrl(`/my/monitor/web/detail/${props.row.id}`)"/>-->
+                    {{ props.row.mission_name }}
                   </q-td>
-                  <q-td key="url" :props="props" class="no-padding">
-                    {{ props.row.url }}
+                  <q-td key="mission_url" :props="props" class="no-padding">
+                    {{ props.row.mission_url }}
                   </q-td>
-                  <q-td key="remark" :props="props" class="no-padding">
-                    {{ props.row.remark ? props.row.remark : tc('暂无备注') }}
+                  <q-td key="mission_remark" :props="props" >
+                    {{ props.row.mission_remark }}
                   </q-td>
-                  <q-td key="creation" :props="props" class="no-padding">
-                    {{ date.formatDate(props.row.creation, 'YYYY-MM-DD HH:mm') }}
+                  <q-td key="mission_created" :props="props">
+                    {{ props.row.mission_created }}
                   </q-td>
-                  <q-td key="operation" :props="props" class="no-padding">
-                    <q-btn color="primary" unelevated no-caps @click="store.triggerReviseTaskDialog(props.row.id)">
-                      {{ tc('修改') }}
-                    </q-btn>
-                    <q-btn class="q-ml-xs" color="primary" unelevated no-caps @click="store.triggerDeleteTaskDialog(props.row.id)">
-                      {{ tc('删除') }}
-                    </q-btn>
-                  </q-td>
+<!--                  <q-td key="probe" :props="props" class="no-padding">-->
+<!--                    探针{{ props.row.probe }}-->
+<!--                  </q-td>-->
                 </q-tr>
               </template>
             </q-table>
-            <q-separator/>
           </div>
+<!--          <div>-->
+<!--            <q-table-->
+<!--              flat-->
+<!--              class="col"-->
+<!--              table-header-class="bg-grey-1 text-grey"-->
+<!--              :rows="webMonitorTaskRow"-->
+<!--              :columns="columns1"-->
+<!--              :loading="isLoad"-->
+<!--              row-key="name"-->
+<!--              color="primary"-->
+<!--              :loading-label="tc('notifyLoading')"-->
+<!--              :no-data-label="tc('noData')"-->
+<!--            >-->
+<!--              <template v-slot:body="props">-->
+<!--                <q-tr :props="props">-->
+<!--                  <q-td key="id" :props="props" class="no-padding">-->
+<!--                    <q-btn no-caps flat color="primary" :label="tc('查看详情')" @click="navigateToUrl(`/my/monitor/web/detail/${props.row.id}`)"/>-->
+<!--                    <span>{{ props.row.id }}</span>-->
+<!--                  </q-td>-->
+<!--                  <q-td key="name" :props="props" class="no-padding">-->
+<!--                    {{ props.row.name }}-->
+<!--                  </q-td>-->
+<!--                  <q-td key="url" :props="props" class="no-padding">-->
+<!--                    {{ props.row.url }}-->
+<!--                  </q-td>-->
+<!--                  <q-td key="remark" :props="props" class="no-padding">-->
+<!--                    {{ props.row.remark ? props.row.remark : tc('暂无备注') }}-->
+<!--                  </q-td>-->
+<!--                  <q-td key="creation" :props="props" class="no-padding">-->
+<!--                    {{ date.formatDate(props.row.creation, 'YYYY-MM-DD HH:mm') }}-->
+<!--                  </q-td>-->
+<!--                  <q-td key="operation" :props="props" class="no-padding">-->
+<!--                    <q-btn color="primary" unelevated no-caps @click="store.triggerReviseTaskDialog(props.row.id)">-->
+<!--                      {{ tc('修改') }}-->
+<!--                    </q-btn>-->
+<!--                    <q-btn class="q-ml-xs" color="primary" unelevated no-caps @click="store.triggerDeleteTaskDialog(props.row.id)">-->
+<!--                      {{ tc('删除') }}-->
+<!--                    </q-btn>-->
+<!--                  </q-td>-->
+<!--                </q-tr>-->
+<!--              </template>-->
+<!--            </q-table>-->
+<!--            <q-separator/>-->
+<!--          </div>-->
         </div>
       </div>
     </div>
