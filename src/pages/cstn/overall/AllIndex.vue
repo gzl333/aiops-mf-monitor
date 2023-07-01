@@ -1,14 +1,10 @@
 <script setup lang="ts">
 /* eslint-disable */
 import { onMounted } from 'vue'
-// import { navigateToUrl } from 'single-spa'
-// import { useStore } from 'stores/store'
-// import { useRoute, useRouter } from 'vue-router'
-// import { i18n } from 'boot/i18n'
 import G6 from '@antv/g6'
 import { insertCss } from 'insert-css'
 import { isNumber, isArray } from '@antv/util'
-import { mapData, nodeMapData } from 'assets/topology/topologyData'
+import { nodeMapData } from 'assets/topology/topologyData'
 
 insertCss(`
   .g6-component-contextmenu {
@@ -42,16 +38,13 @@ insertCss(`
   }
 `)
 
-// 自动聚类算法。优势：根据节点间的紧密程度计算，较之于 Label Propagation 更准确。
-const { louvain } = G6.Algorithm
 const { uniqueId } = G6.Util
 const NODESIZEMAPPING = 'degree'
 const SMALLGRAPHLABELMAXLENGTH = 5
 const labelMaxLength = SMALLGRAPHLABELMAXLENGTH
 const DEFAULTNODESIZE = 20
 const DEFAULTAGGREGATEDNODESIZE = 53
-const NODE_LIMIT = 40 // TODO: find a proper number for maximum node number on the canvas
-
+const NODE_LIMIT = 40
 let graph = null
 let currentUnproccessedData = { nodes: [], edges: [] }
 let nodeMap = {}
@@ -70,15 +63,12 @@ const layout = {
 let expandArray = []
 let collapseArray = []
 let shiftKeydown = false
-let CANVAS_WIDTH = 800,
-  CANVAS_HEIGHT = 800
-
+let CANVAS_WIDTH = 800, CANVAS_HEIGHT = 800
 const duration = 2000
 const animateOpacity = 0.6
 const animateBackOpacity = 0.1
 const virtualEdgeOpacity = 0.1
 const realEdgeOpacity = 0.2
-
 const darkBackColor = 'rgb(43, 47, 51)'
 const disableColor = '#777'
 const theme = 'dark'
@@ -94,14 +84,12 @@ const subjectColors = [
   '#008685',
   '#F08BB4'
 ]
-
 const colorSets = G6.Util.getColorSetsBySubjectColors(
   subjectColors,
   darkBackColor,
   theme,
   disableColor
 )
-
 const global = {
   node: {
     style: {
@@ -142,19 +130,13 @@ const global = {
   }
 }
 
-const descendCompare = (p) => {
+const descendCompare = (p: string) => {
   // 这是比较函数
   return function (m, n) {
     const a = m[p]
     const b = n[p]
     return b - a // 降序
   }
-}
-
-const clearFocusItemState = (graph) => {
-  if (!graph) return
-  clearFocusNodeState(graph)
-  clearFocusEdgeState(graph)
 }
 
 // 清除图上所有节点的 focus 状态及相应样式
@@ -173,6 +155,12 @@ const clearFocusEdgeState = (graph) => {
   })
 }
 
+const clearFocusItemState = (graph) => {
+  if (!graph) return
+  clearFocusNodeState(graph)
+  clearFocusEdgeState(graph)
+}
+
 // 截断长文本。length 为文本截断后长度，elipsis 是后缀
 const formatText = (text, length = 5, elipsis = '...') => {
   if (!text) return ''
@@ -187,6 +175,7 @@ const labelFormatter = (text, minLength = 10) => {
   return text
 }
 
+// 此方法用于添加第一级节点的样式以及文字等信息
 const processNodesEdges = (nodes, edges, width, height, largeGraphMode, edgeLabelVisible, isNewGraph = false) => {
   if (!nodes || nodes.length === 0) return {}
   const currentNodeMap = {}
@@ -386,6 +375,7 @@ const processNodesEdges = (nodes, edges, width, height, largeGraphMode, edgeLabe
   }
 }
 
+// 此方法用于提供布局拉力
 const getForceLayoutConfig = (graph, largeGraphMode, configSettings) => {
   let {
     linkDistance,
@@ -547,6 +537,7 @@ const handleRefreshGraph = (graph, graphData, width, height, largeGraphMode, edg
   return { nodes, edges }
 }
 
+// 此方法用于展开第二级节点，计算节点以及连线信息
 const getMixedGraph = (aggregatedData, originData, nodeMap, aggregatedNodeMap, expandArray, collapseArray) => {
   let nodes = []
   const edges = []
@@ -568,13 +559,7 @@ const getMixedGraph = (aggregatedData, originData, nodeMap, aggregatedNodeMap, e
       aggregatedNodeMap[cluster.id].expanded = false
     }
   })
-  console.log('originData', originData)
-  console.log('expandMap', expandMap)
-  console.log('nodeMap', nodeMap)
   originData.edges.forEach((edge) => {
-    console.log('edge', edge.target)
-    console.log(nodeMap[edge.target])
-    console.log(expandMap[nodeMap[edge.target]].clusterId)
     const isSourceInExpandArray = expandMap[nodeMap[edge.source].clusterId]
     const isTargetInExpandArray = expandMap[nodeMap[edge.target].clusterId]
     if (isSourceInExpandArray && isTargetInExpandArray) {
@@ -1411,165 +1396,75 @@ onMounted(() => {
   // 存储的是第二级的所有节点
   nodeMap = {}
   // 将数据信息data聚合
-  // const clusteredData = {
-  //   clusterEdges: [
-  //     { source: '1', target: '2', weight: 2, count: 2 },
-  //     { source: '1', target: '3', weight: 2, count: 2 },
-  //     { source: '4', target: '5', weight: 1, count: 1 },
-  //     { source: '4', target: '6', weight: 1, count: 1 },
-  //     // { source: '3', target: '2', weight: 1, count: 1 },
-  //     // { source: '3', target: '3', weight: 15,  count: 15 }
-  //     // { count: 60, source: '10', target: '10', weight: 60 },
-  //     // { count: 3, source: '10', target: '1', weight: 3 },
-  //     // { count: 4, source: '2', target: '10', weight: 4 },
-  //     // { count: 4, source: '10', target: '2', weight: 4 },
-  //     // { count: 3, source: '4', target: '10', weight: 3 },
-  //     // { count: 7, source: '3', target: '10', weight: 7 },
-  //     // { count: 1, source: '6', target: '10', weight: 1 },
-  //     // { count: 1, source: '8', target: '6', weight: 1 },
-  //     // { count: 12, source: '8', target: '10', weight: 12 },
-  //     // { count: 6, source: '7', target: '10', weight: 6 },
-  //     // { count: 6, source: '7', target: '7', weight: 6 },
-  //     // { count: 1, source: '6', target: '7', weight: 1 },
-  //     // { count: 1, source: '6', target: '6', weight: 1 },
-  //     // { count: 3, source: '8', target: '7', weight: 3 },
-  //     // { count: 1, source: '8', target: '6', weight: 1 },
-  //     // { count: 1, source: '8', target: '2', weight: 1 },
-  //     // { count: 70, source: '8', target: '8', weight: 70 },
-  //     // { count: 1, source: '7', target: '8', weight: 1 },
-  //     // { count: 5, source: '10', target: '8', weight: 5 },
-  //     // { count: 2, source: '9', target: '8', weight: 2 },
-  //     // { count: 1, source: '9', target: '9', weight: 1 }
-  //   ],
-  //   clusters: [
-  //     {
-  //       id: '1',
-  //       label: '国际出口',
-  //       nodes: []
-  //     },
-  //     {
-  //       id: '2',
-  //       label: '软件园接入',
-  //       nodes: [
-  //         { id: 'Listolier', clusterId: '2' },
-  //         { id: 'Blacheville', clusterId: '2' },
-  //         { id: 'Favourite', clusterId: '2' },
-  //         { id: 'Dahlia', clusterId: '2' },
-  //         { id: 'Zephine', clusterId: '2' },
-  //         { id: 'Fantine', clusterId: '2' },
-  //         { id: 'Marguerite', clusterId: '2' },
-  //         { id: 'Tholomyes', clusterId: '2' },
-  //         { id: 'Fameuil', clusterId: '2' },
-  //         { id: 'Perpetue', clusterId: '2' },
-  //         { id: 'Simplice', clusterId: '2' },
-  //         { id: 'Simplice1', clusterId: '2' }
-  //       ]
-  //     },
-  //     {
-  //       id: '3',
-  //       label: '软件园核心',
-  //       nodes: [
-  //         { id: 'Judge', clusterId: '3' },
-  //         { id: 'Brevet', clusterId: '3' },
-  //         { id: 'Chenildieu', clusterId: '3' },
-  //         { id: 'Cochepaille', clusterId: '3' }
-  //       ]
-  //     },
-  //     {
-  //       id: '4',
-  //       label: '国内出口',
-  //       nodes: []
-  //     },
-  //     {
-  //       id: '5',
-  //       label: '信息化大厦核心',
-  //       nodes: [
-  //         { id: 'Mme.Burgon', clusterId: '5' },
-  //         { id: 'Jondrette', clusterId: '5' }
-  //       ]
-  //     },
-  //     {
-  //       id: '6',
-  //       label: '怀柔核心',
-  //       nodes: [
-  //         { id: 'Mme.Pontmercy', clusterId: '6' }
-  //       ]
-  //     }
-  //
-  //     // {
-  //     //   id: '7',
-  //     //   nodes: [
-  //     //     { id: 'BaronessT', clusterId: '7' },
-  //     //     { id: 'Gillenormand', clusterId: '7' },
-  //     //     { id: 'Magnon', clusterId: '7' },
-  //     //     { id: 'Lt.Gillenormand', clusterId: '7' },
-  //     //     { id: 'Mlle.Gillenormand', clusterId: '7' },
-  //     //     { id: 'Mlle.Vaubois', clusterId: '7' }
-  //     //   ]
-  //     // },
-  //     // {
-  //     //   id: '8',
-  //     //   nodes: [
-  //     //     { id: 'Grantaire', clusterId: '8' },
-  //     //     { id: 'Prouvaire', clusterId: '8' },
-  //     //     { id: 'Feuilly', clusterId: '8' },
-  //     //     { id: 'Courfeyrac', clusterId: '8' },
-  //     //     { id: 'Bahorel', clusterId: '8' },
-  //     //     { id: 'Bossuet', clusterId: '8' },
-  //     //     { id: 'Joly', clusterId: '8' },
-  //     //     { id: 'Mme.Hucheloup', clusterId: '8' },
-  //     //     { id: 'Gavroche', clusterId: '8' },
-  //     //     { id: 'Marius', clusterId: '8' },
-  //     //     { id: 'Mabeuf', clusterId: '8' },
-  //     //     { id: 'Enjolras', clusterId: '8' },
-  //     //     { id: 'Combeferre', clusterId: '8' },
-  //     //     { id: 'MotherPlutarch', clusterId: '8' }
-  //     //   ]
-  //     // },
-  //     // {
-  //     //   id: '9',
-  //     //   nodes: [
-  //     //     { id: 'Child2', clusterId: '9' },
-  //     //     { id: 'Child1', clusterId: '9' }
-  //     //   ]
-  //     // },
-  //     // {
-  //     //   id: '10',
-  //     //   nodes: [
-  //     //     { id: 'Brujon', clusterId: '10' },
-  //     //     { id: 'Gueulemer', clusterId: '10' },
-  //     //     { id: 'Babet', clusterId: '10' },
-  //     //     { id: 'Claquesous', clusterId: '10' },
-  //     //     { id: 'Montparnasse', clusterId: '10' },
-  //     //     { id: 'Mme.Thenardier', clusterId: '10' },
-  //     //     { id: 'Thenardier', clusterId: '10' },
-  //     //     { id: 'Javert', clusterId: '10' },
-  //     //     { id: 'Boulatruelle', clusterId: '10' },
-  //     //     { id: 'Eponine', clusterId: '10' },
-  //     //     { id: 'Anzelma', clusterId: '10' },
-  //     //     { id: 'Cosette', clusterId: '10' },
-  //     //     { id: 'Woman2', clusterId: '10' },
-  //     //     { id: 'Toussaint', clusterId: '10' },
-  //     //     { id: 'Valjean', clusterId: '10' },
-  //     //     { id: 'Mme.deR', clusterId: '10' },
-  //     //     { id: 'Isabeau', clusterId: '10' },
-  //     //     { id: 'Gervais', clusterId: '10' },
-  //     //     { id: 'Scaufflaire', clusterId: '10' },
-  //     //     { id: 'Woman1', clusterId: '10' },
-  //     //     { id: 'Labarre', clusterId: '10' }
-  //     //   ]
-  //     // }
-  //   ]
-  // }
-  const clusteredData = louvain(mapData, false, 'weight')
+  const clusteredData = {
+    clusterEdges: [
+      { source: '1', target: '2', weight: 1, count: 1 },
+      { source: '1', target: '3', weight: 1, count: 1 },
+      { source: '4', target: '5', weight: 2, count: 2 },
+      { source: '4', target: '6', weight: 2, count: 2 }
+    ],
+    clusters: [
+      {
+        id: '1',
+        label: '国际出口',
+        nodes: []
+      },
+      {
+        id: '2',
+        label: '软件园接入',
+        nodes: [
+          { id: 'SoftwareAccess-1', clusterId: '2', label: '软件园接入1' },
+          { id: 'SoftwareAccess-2', clusterId: '2', label: '软件园接入2' },
+          { id: 'SoftwareAccess-3', clusterId: '2', label: '软件园接入3' },
+          { id: 'SoftwareAccess-4', clusterId: '2', label: '软件园接入4' },
+          { id: 'SoftwareAccess-5', clusterId: '2', label: '软件园接入5' },
+          { id: 'SoftwareAccess-6', clusterId: '2', label: '软件园接入6' },
+          { id: 'SoftwareAccess-7', clusterId: '2', label: '软件园接入7' },
+          { id: 'SoftwareAccess-8', clusterId: '2', label: '软件园接入8' },
+          { id: 'SoftwareAccess-9', clusterId: '2', label: '软件园接入9' },
+          { id: 'SoftwareAccess-10', clusterId: '2', label: '软件园接入10' },
+          { id: 'SoftwareAccess-11', clusterId: '2', label: '软件园接入11' },
+          { id: 'SoftwareAccess-12', clusterId: '2', label: '软件园接入12' }
+        ]
+      },
+      {
+        id: '3',
+        label: '软件园核心',
+        nodes: [
+          { id: 'SoftwareCore-1', clusterId: '3', label: '软件园核心1' },
+          { id: 'SoftwareCore-2', clusterId: '3', label: '软件园核心2' },
+          { id: 'SoftwareCore-3', clusterId: '3', label: '软件园核心3' },
+          { id: 'SoftwareCore-4', clusterId: '3', label: '软件园核心4' }
+        ]
+      },
+      {
+        id: '4',
+        label: '国内出口',
+        nodes: []
+      },
+      {
+        id: '5',
+        label: '信息化大厦核心',
+        nodes: [
+          { id: 'CnicCore-1', clusterId: '5', label: '信息化大厦核心1' },
+          { id: 'CnicCore-2', clusterId: '5', label: '信息化大厦核心2' }
+        ]
+      },
+      {
+        id: '6',
+        label: '怀柔核心',
+        nodes: [
+          { id: 'HuairouCore-1', clusterId: '6', label: '怀柔核心1' }
+        ]
+      }
+    ]
+  }
   // 存储第一级几点以及连线信息
   const aggregatedData = { nodes: [], edges: [] }
-  console.log('clusteredData', clusteredData)
   // 子节点从这段代码遍历出来
   clusteredData.clusters.forEach((cluster, i) => {
     cluster.nodes.forEach((node) => {
       node.level = 0
-      node.label = node.id
       node.type = ''
       node.colorSet = colorSets[i]
       nodeMap[node.id] = node
@@ -1601,7 +1496,7 @@ onMounted(() => {
     } else cedge.type = 'line'
     aggregatedData.edges.push(cedge)
   })
-  mapData.edges.forEach((edge) => {
+  nodeMapData.edges.forEach((edge) => {
     edge.label = `${edge.source}-${edge.target}`
     edge.id = `edge-${uniqueId()}`
   })
@@ -1672,7 +1567,7 @@ onMounted(() => {
           collapseArray = newArray.collapseArray
           mixedGraphData = getMixedGraph(
             clusteredData,
-            mapData,
+            nodeMapData,
             nodeMap,
             aggregatedNodeMap,
             expandArray,
@@ -1691,7 +1586,7 @@ onMounted(() => {
           }
           mixedGraphData = getMixedGraph(
             clusteredData,
-            mapData,
+            nodeMapData,
             nodeMap,
             aggregatedNodeMap,
             expandArray,
@@ -1703,7 +1598,7 @@ onMounted(() => {
           collapseArray = []
           mixedGraphData = getMixedGraph(
             clusteredData,
-            mapData,
+            nodeMapData,
             nodeMap,
             aggregatedNodeMap,
             expandArray,
@@ -1715,7 +1610,7 @@ onMounted(() => {
           mixedGraphData = getNeighborMixedGraph(
             model,
             expandNeighborSteps,
-            mapData,
+            nodeMapData,
             clusteredData,
             currentUnproccessedData,
             nodeMap,
@@ -1811,8 +1706,6 @@ onMounted(() => {
   // layout.instance.animate = false
   layout.instance.execute()
   bindListener(graph)
-  console.log(aggregatedData)
-  console.log(processedEdges)
   graph.data({ nodes: aggregatedData.nodes, edges: processedEdges })
   graph.render()
 })

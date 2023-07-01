@@ -20,7 +20,7 @@ const routes: RouteRecordRaw[] = [
           },
           {
             path: 'export',
-            component: () => import('pages/cstn/export/ExportIndex.vue')
+            component: () => import('pages/cstn/overall/AllIndex2.vue')
           }
         ]
       },

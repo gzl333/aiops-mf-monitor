@@ -549,11 +549,6 @@ const handleRefreshGraph = (graph, graphData, width, height, largeGraphMode, edg
 }
 
 const getMixedGraph = (aggregatedData, originData, nodeMap, aggregatedNodeMap, expandArray, collapseArray) => {
-  console.log(aggregatedData)
-  console.log(originData)
-  console.log(nodeMap)
-  console.log(aggregatedNodeMap)
-  console.log(expandArray)
   let nodes = []
   const edges = []
 
@@ -565,7 +560,9 @@ const getMixedGraph = (aggregatedData, originData, nodeMap, aggregatedNodeMap, e
   collapseArray.forEach((collapseModel) => {
     collapseMap[collapseModel.id] = true
   })
-
+  console.log('originData', originData)
+  console.log('expandMap', expandMap)
+  console.log('nodeMap', nodeMap)
   aggregatedData.clusters.forEach((cluster, i) => {
     if (expandMap[cluster.id]) {
       nodes = nodes.concat(cluster.nodes)
@@ -576,6 +573,8 @@ const getMixedGraph = (aggregatedData, originData, nodeMap, aggregatedNodeMap, e
     }
   })
   originData.edges.forEach((edge) => {
+    console.log('edge', edge.target)
+    console.log('expandMap', expandMap)
     console.log(expandMap[nodeMap[edge.target].clusterId])
     const isSourceInExpandArray = expandMap[nodeMap[edge.source].clusterId]
     const isTargetInExpandArray = expandMap[nodeMap[edge.target].clusterId]

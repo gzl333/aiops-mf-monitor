@@ -6,6 +6,7 @@ import { i18n } from 'boot/i18n'
 import ModifyWarningLine from 'components/mail/ModifyWarningLine.vue'
 import WebTaskReviseDialog from 'components/web/WebTaskReviseDialog.vue'
 import WebTaskDeleteDialog from 'components/web/WebTaskDeleteDialog.vue'
+import aiops from 'src/api/aiops'
 const { tc } = i18n.global
 
 export interface DataCenterInterface {
@@ -381,7 +382,7 @@ export const useStore = defineStore('main', {
         allIds: [],
         isLoaded: false
       }
-      const webMonitorRes = await service.monitor.getMonitorWebsite({ query: { page: 1, page_size: 100 } })
+      const webMonitorRes = await aiops.monitor.getWebsite()
       const web = new schema.Entity('web', {})
       webMonitorRes.data.results.forEach((data: Record<string, never>) => {
         const normalizedData = normalize(data, web)

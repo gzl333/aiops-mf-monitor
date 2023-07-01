@@ -505,7 +505,7 @@ onUnmounted(() => {
         {{ tc('网站监控详情') }}
       </div>
     </div>
-    <div class="row justify-center">
+    <div class="row justify-center" v-if="store.tables.webMonitorTable.byId[taskId]?.name && store.tables.webMonitorTable.byId[taskId]?.name">
       <div class="text-h6">
         <div>
           <span>{{ tc('监控任务名称') }}：</span>
