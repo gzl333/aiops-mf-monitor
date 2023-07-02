@@ -147,6 +147,27 @@ export default {
         params: payload.query
       }
       return axiosAiops.get('v1/monitor/website/' + payload.path.id + '/query/range', config)
+    },
+    getAlertCnt (payload: {query: {
+        start?: string
+        end?: string
+      }}) {
+      const configs = {
+        params: payload?.query
+      }
+      return axiosAiops.get('v1/alert/origin-alert/alertname/aggregate/', configs)
+    },
+    getWebsiteFilter (payload: {query: {
+        probe_id?: string
+        start?: string
+        end?: string
+        delay_start?: number
+        delay_end?: number
+      }}) {
+      const configs = {
+        params: payload?.query
+      }
+      return axiosAiops.get('v1/monitor/website/filter/', configs)
     }
   }
 }

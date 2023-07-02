@@ -9,6 +9,15 @@ import { i18n } from 'boot/i18n'
 import $bus from 'src/hooks/bus'
 import aiops from 'src/api/aiops'
 
+interface websiteFilter {
+  start: string
+  end: string
+  delay_start: number
+  delay_end: number
+  probe_id: string
+  status: boolean
+  // color: string
+}
 interface distributionData {
   value: number
   name: string
@@ -25,8 +34,8 @@ interface allMissionlist {
   // probe: string
   // detail: string
 }
+const date1 = ref(date.formatDate(date.subtractFromDate(Date.now(), { days: 7 }), 'YYYY-MM-DD HH:mm'))
 const date2 = ref(date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm'))
-const date1 = ref(date.formatDate(Date.now() - 300, 'YYYY-MM-DD HH:mm'))
 const standard = ref({
   min: 0,
   max: 500
@@ -121,7 +130,7 @@ const dataOption = computed(() => ({
 })) // 嵌套饼环图
 
 const allMissionColumns = [
-  { name: 'id', label: '任务id', align: 'center', field: 'id' },
+  // { name: 'id', label: '任务id', align: 'center', field: 'id' },
   { name: 'mission_name', align: 'center', label: '任务名称', field: 'mission_name', sortable: true },
   { name: 'mission_url', align: 'center', label: '任务链接', field: 'mission_url', sortable: true },
   { name: 'mission_remark', align: 'center', label: '备注', field: 'mission_url', sortable: true },
@@ -181,10 +190,10 @@ watch(model_option_type_search, async (new_value) => {
       isDisable1.value = true
     } else {
       if (new_value === '流畅') {
-        standard.value = { min: 1, max: 3000 }
+        standard.value = { min: 1, max: 50 }
         isDisable1.value = false
       } else {
-        standard.value = { min: 3000, max: 5000 }
+        standard.value = { min: 50, max: 5000 }
         isDisable1.value = false
       }
     }
@@ -277,23 +286,42 @@ const getDistribution = () => {
 }
 const funTmp = () => {
   console.log('waiting for api')
-  const probeid = ref(1)
-  if (typeselect.value === '探针1') {
-    probeid.value = 1
+  const probeid = ref('')
+  if (model_option_search.value === '探针1') {
+    probeid.value = '1'
   } else {
-    probeid.value = 2
+    probeid.value = '2'
   }
   if (expanded.value === true) {
-    console.log('detail search')
-    console.log(date1.value)
-    console.log(date2.value)
-    console.log(model_option_search.value)
-    if (model_option_type_search.value === '异常') console.log(model_option_type_search.value)
-    else {
-      console.log(standard.value)
+    // console.log('detail search')
+    // console.log(date1.value)
+    // console.log(date2.value)
+    // console.log(model_option_search.value)
+    const single_website_filter: websiteFilter = {
+      start: '',
+      end: '',
+      delay_start: 0,
+      delay_end: 0,
+      probe_id: '',
+      status: false
+    }
+    if (model_option_type_search.value === '异常') {
+      console.log('type search not available')
+    } else {
+      single_website_filter.start = date.formatDate(date1.value, 'X')
+      single_website_filter.end = date.formatDate(date2.value, 'X')
+      single_website_filter.delay_start = standard.value.min
+      single_website_filter.delay_end = standard.value.max
+      single_website_filter.probe_id = probeid.value
+      getWebsiteFilter(single_website_filter)
     }
   } else {
-    console.log(text.value + ' as param')
+    // console.log(text.value + ' as param')
+    if (text.value === '') {
+      getWebsite()
+    } else {
+      console.log('search with parameters not available')
+    }
   }
 }
 
@@ -338,6 +366,28 @@ watch(date2, async (newValue, oldValue) => {
 })
 getDistribution()
 getWebsite()
+
+const getWebsiteFilter = (instance : websiteFilter) => {
+  allMissionRef.value = []
+  aiops.monitor.getWebsiteFilter({ query: { probe_id: instance.probe_id, start: instance.start, end: instance.end, delay_end: instance.delay_end, delay_start: instance.delay_start } }).then((res) => {
+    console.log(res)
+    for (const resKey in res.data.results) {
+      const single_data: allMissionlist = {
+        id: '',
+        mission_name: '',
+        mission_url: '',
+        mission_remark: '',
+        mission_created: ''
+      }
+      single_data.id = res.data.results[resKey].id
+      single_data.mission_name = res.data.results[resKey].name
+      single_data.mission_url = res.data.results[resKey].hostname
+      single_data.mission_remark = res.data.results[resKey].remark
+      single_data.mission_created = date.formatDate(res.data.results[resKey].creation, 'YYYY-MM-DD HH:mm:ss')
+      allMissionRef.value.push(single_data)
+    }
+  })
+}
 </script>
 
 <template>
@@ -427,7 +477,7 @@ getWebsite()
                   @update:model-value="fun2"
                   :disable="isDisable1"
                   :min="1"
-                  :max="5000"
+                  :max="10000"
                   label-always
                 />
               </div>
@@ -452,7 +502,7 @@ getWebsite()
               flat
               class="col"
               table-header-class="bg-grey-1 text-grey"
-              title="实时监控任务结果"
+              title=""
               color="primary"
               :rows="allMissionRows"
               :loading-label="tc('notifyLoading')"
@@ -463,12 +513,12 @@ getWebsite()
             >
               <template v-slot:body="props">
                 <q-tr :props="props">
-                  <q-td key="id" :props="props" class="no-padding">
-                    <q-btn no-caps flat color="primary" :label="tc('查看详情')" @click="navigateToUrl(`/my/monitor/web/detail/${props.row.id}`)"/>
+                  <q-td key="id" :props="props" class="no-padding" v-show="false">
                     <span>{{ props.row.id }}</span>
                   </q-td>
                   <q-td key="mission_name" :props="props" class="no-padding">
 <!--                    <q-btn no-caps flat color="primary" :label="tc('查看详情')" @click="navigateToUrl(`/my/monitor/web/detail/${props.row.id}`)"/>-->
+                    <q-btn no-caps flat color="primary" :label="tc('查看详情')" @click="navigateToUrl(`/my/monitor/web/detail/${props.row.id}`)"/>
                     {{ props.row.mission_name }}
                   </q-td>
                   <q-td key="mission_url" :props="props" class="no-padding">

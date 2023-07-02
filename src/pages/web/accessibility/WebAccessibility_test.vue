@@ -44,7 +44,7 @@ interface delay_distribution_series {
   data: number[]
 }
 interface runtime_mission_list {
-  name: string
+  id: string
   mission_name: string
   mission_url: string
   mission_status: string
@@ -148,41 +148,41 @@ const pagination = ref({
   rowsPerPage: 20
 })
 
-const columns = [
-  {
-    name: 'name',
-    required: true,
-    label: '告警时间',
-    align: 'left',
-    field: 'name'
-  },
-  { name: 'mission_name', align: 'center', label: '告警详情', field: 'mission_name' }
-]
+// const columns = [
+//   {
+//     name: 'name',
+//     required: true,
+//     label: '告警时间',
+//     align: 'left',
+//     field: 'name'
+//   },
+//   { name: 'mission_name', align: 'center', label: '告警详情', field: 'mission_name' }
+// ]
 
-const rows = [
-  {
-    name: 'Frozen Yogurt',
-    mission_name: 159
-  },
-  {
-    name: 'Ice cream sandwich',
-    mission_name: 237
-  },
-  {
-    name: 'Eclair',
-    mission_name: 262
-  },
-  {
-    name: 'Cupcake',
-    mission_name: 305
-  },
-  {
-    name: 'Gingerbread',
-    mission_name: 356
-  }
-]
+// const rows = [
+//   {
+//     name: 'Frozen Yogurt',
+//     mission_name: 159
+//   },
+//   {
+//     name: 'Ice cream sandwich',
+//     mission_name: 237
+//   },
+//   {
+//     name: 'Eclair',
+//     mission_name: 262
+//   },
+//   {
+//     name: 'Cupcake',
+//     mission_name: 305
+//   },
+//   {
+//     name: 'Gingerbread',
+//     mission_name: 356
+//   }
+// ]
+const date1 = ref(date.formatDate(date.subtractFromDate(Date.now(), { days: 7 }), 'YYYY-MM-DD HH:mm'))
 const date2 = ref(date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm'))
-const date1 = ref(date.formatDate(Date.now() - 300, 'YYYY-MM-DD HH:mm'))
 // console.log(date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm'))
 // const model = ref(null)
 // const options = [
@@ -206,7 +206,7 @@ const date1 = ref(date.formatDate(Date.now() - 300, 'YYYY-MM-DD HH:mm'))
 const cpuOption = computed(() => ({
   color: ['#80FFA5', '#00DDFF', '#37A2FF', '#FF0087', '#FFBF00'],
   title: {
-    text: '12小时状态分布图'
+    text: '24小时状态分布图'
   },
   tooltip: {
     trigger: 'axis',
@@ -235,7 +235,7 @@ const cpuOption = computed(() => ({
     {
       type: 'category',
       boundaryGap: false,
-      data: ['-12', '-11`', '-10', '-9', '-8', '-7', '-6', '-5', '-4', '-3', '-2', '-1']
+      data: ['-24', '-23', '-22', '-21`', '-20', '-19', '-18', '-17', '-16', '-15', '-14', '-13', '-12', '-11`', '-10', '-9', '-8', '-7', '-6', '-5', '-4', '-3', '-2', '-1']
     }
   ],
   yAxis: [
@@ -377,6 +377,8 @@ const getDelayDistribution = () => {
   // console.log(res)
   // console.log(series_ref.value)
   series_ref.value = tmp_series_ref.value
+  // console.log('hello')
+  // console.log(series_ref.value)
 }
 watch(date1, (newValue, oldValue) => {
   // const bigger_time = date.formatDate(date2.value, 'X')
@@ -393,7 +395,10 @@ watch(date1, (newValue, oldValue) => {
     date1.value = oldValue
     alert('start time should not biggger than end time!')
   }
-  if (date1.value !== oldValue) getDelayDistribution()
+  if (date1.value !== oldValue) {
+    getDelayDistribution()
+    getAlertCnt()
+  }
   // console.log(bigger_time)
   // console.log(newValue)
   // console.log(diff)
@@ -412,14 +417,37 @@ watch(date2, async (newValue, oldValue) => {
     date2.value = oldValue
     alert('end time should not be smaller than start time!')
   }
-  if (date2.value !== oldValue) getDelayDistribution()
+  if (date2.value !== oldValue) {
+    getDelayDistribution()
+    getAlertCnt()
+  }
   // console.log(bigger_time)
   // console.log(newValue)
   // console.log(diff)
 })
+const alertCnt = ref(null)
+const getAlertCnt = () => {
+  const start_time = date.formatDate(date1.value, 'X')
+  const end_time = date.formatDate(date2.value, 'X')
+  // const tmp_series_ref = ref<delay_distribution_series[]>([])
+  aiops.monitor.getAlertCnt({ query: { start: start_time, end: end_time } }).then((res) => {
+    for (const resKey in res.data.results) {
+      // const single_bar: type= new Map()
+      // console.log(resKey)
+      if (res.data.results[resKey].alertname !== 'webPageNotAvailable') {
+        continue
+      }
+      alertCnt.value = res.data.results[resKey].count
+    }
+  })
+  // console.log(res)
+  // console.log(series_ref.value)
+  // series_ref.value = tmp_series_ref.value
+}
 getStatusHourRate()
 getDelayDistribution()
 getStatusOverview()
+getAlertCnt()
 // const fun2 = () => {
 //   model_option_type_search.value = null
 // }
@@ -438,9 +466,9 @@ function compareStatus1 (a, b) {
 const getStatusRate = () => {
   runtime_ref.value = []
   aiops.monitor.getStatusRate({ query: { probe_id: 1 } }).then((res1) => {
-    for (const res1Key in res1.data) {
+    for (const res1Key in res1.data.results) {
       const single_data: runtime_mission_list = {
-        name: '',
+        id: '',
         mission_name: '',
         mission_url: '',
         mission_status: '',
@@ -448,13 +476,15 @@ const getStatusRate = () => {
         probe: '',
         detail: ''
       }
-      single_data.mission_name = 'test'
-      single_data.mission_url = res1.data[res1Key].url
-      single_data.mission_status = res1.data[res1Key].状态
+      single_data.id = res1.data.results[res1Key].id
+      single_data.mission_name = res1.data.results[res1Key].name
+      single_data.mission_url = res1.data.results[res1Key].url
+      single_data.mission_status = res1.data.results[res1Key].状态
+      // console.log(res1.data.results[res1Key].耗时)
       if (single_data.mission_status === '异常') {
-        single_data.mission_delay = res1.data[res1Key].耗时.substring(0, res1.data[res1Key].耗时.length - 2) * -1
+        single_data.mission_delay = res1.data.results[res1Key].耗时.substring(0, res1.data.results[res1Key].耗时.length - 3) * -1
       } else {
-        single_data.mission_delay = res1.data[res1Key].耗时.substring(0, res1.data[res1Key].耗时.length - 2) * 1
+        single_data.mission_delay = res1.data.results[res1Key].耗时.substring(0, res1.data.results[res1Key].耗时.length - 3) * 1
       }
       single_data.probe = '1'
       single_data.detail = '查看详情'
@@ -462,9 +492,9 @@ const getStatusRate = () => {
     }
   })
   aiops.monitor.getStatusRate({ query: { probe_id: 2 } }).then((res2) => {
-    for (const res2Key in res2.data) {
+    for (const res2Key in res2.data.results) {
       const single_data: runtime_mission_list = {
-        name: '',
+        id: '',
         mission_name: '',
         mission_url: '',
         mission_status: '',
@@ -472,13 +502,14 @@ const getStatusRate = () => {
         probe: '',
         detail: ''
       }
-      single_data.mission_name = 'test'
-      single_data.mission_url = res2.data[res2Key].url
-      single_data.mission_status = res2.data[res2Key].状态
+      single_data.id = res2.data.results[res2Key].id
+      single_data.mission_name = res2.data.results[res2Key].name
+      single_data.mission_url = res2.data.results[res2Key].url
+      single_data.mission_status = res2.data.results[res2Key].状态
       if (single_data.mission_status === '异常') {
-        single_data.mission_delay = res2.data[res2Key].耗时.substring(0, res2.data[res2Key].耗时.length - 2) * -1
+        single_data.mission_delay = res2.data.results[res2Key].耗时.substring(0, res2.data.results[res2Key].耗时.length - 3) * -1
       } else {
-        single_data.mission_delay = res2.data[res2Key].耗时.substring(0, res2.data[res2Key].耗时.length - 2) * 1
+        single_data.mission_delay = res2.data.results[res2Key].耗时.substring(0, res2.data.results[res2Key].耗时.length - 3) * 1
       }
       single_data.probe = '2'
       single_data.detail = '查看详情'
@@ -497,7 +528,6 @@ const runtime_columns = [
   { name: 'probe', align: 'center', label: '探测节点', field: 'probe', sortable: true }
 ]
 const runtime_rows = runtime_ref
-
 </script>
 
 <template>
@@ -507,6 +537,67 @@ const runtime_rows = runtime_ref
         <div class="content-fixed-width">
           <div class="row">
             <div class="col-5">
+              <div class="row items-center">
+                <div class="row items-center justify-end">
+                  <q-input class="q-mr-md" filled dense v-model="date1">
+                    <template v-slot:prepend>
+                      <q-icon name="event" class="cursor-pointer">
+                        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                          <q-date v-model="date1" mask="YYYY-MM-DD HH:mm">
+                            <div class="row items-center justify-end">
+                              <q-btn v-close-popup label="Close" color="primary" flat />
+                            </div>
+                          </q-date>
+                        </q-popup-proxy>
+                      </q-icon>
+                    </template>
+
+                    <template v-slot:append>
+                      <q-icon name="access_time" class="cursor-pointer">
+                        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                          <q-time v-model="date1" mask="YYYY-MM-DD HH:mm" format24h>
+                            <div class="row items-center justify-end">
+                              <q-btn v-close-popup label="Close" color="primary" flat />
+                            </div>
+                          </q-time>
+                        </q-popup-proxy>
+                      </q-icon>
+                    </template>
+                  </q-input>
+                  <div class="q-mr-md">一</div>
+                  <q-input filled dense v-model="date2">
+                    <template v-slot:prepend>
+                      <q-icon name="event" class="cursor-pointer">
+                        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                          <q-date v-model="date2" mask="YYYY-MM-DD HH:mm">
+                            <div class="row items-center justify-end">
+                              <q-btn v-close-popup label="Close" color="primary" flat />
+                            </div>
+                          </q-date>
+                        </q-popup-proxy>
+                      </q-icon>
+                    </template>
+
+                    <template v-slot:append>
+                      <q-icon name="access_time" class="cursor-pointer">
+                        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                          <q-time v-model="date2" mask="YYYY-MM-DD HH:mm" format24h>
+                            <div class="row items-center justify-end">
+                              <q-btn v-close-popup label="Close" color="primary" flat />
+                            </div>
+                          </q-time>
+                        </q-popup-proxy>
+                      </q-icon>
+                    </template>
+                  </q-input>
+                </div>
+                <div class="q-mt-lg">
+                  <div class="col text-center">
+                  <div>告警数：{{ alertCnt }}</div>
+                    <div></div>
+                  </div>
+                </div>
+              </div>
               <div class="row items-center">
                 <div class="col">
                   <pie-chart height="220" :option="overviewOption"/>
@@ -518,70 +609,8 @@ const runtime_rows = runtime_ref
                   <div>正常连接数：{{ valid_mission_cnt }}</div>
                 </div>
               </div>
-              <q-table
-                flat bordered
-                title="告警信息"
-                dense
-                :rows="rows"
-                :columns="columns"
-                row-key="name"
-                hide-pagination
-              />
             </div>
             <div class="col-7">
-              <div class="row items-center justify-end">
-                <q-input class="q-mr-md" filled dense v-model="date1">
-                  <template v-slot:prepend>
-                    <q-icon name="event" class="cursor-pointer">
-                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-date v-model="date1" mask="YYYY-MM-DD HH:mm">
-                          <div class="row items-center justify-end">
-                            <q-btn v-close-popup label="Close" color="primary" flat />
-                          </div>
-                        </q-date>
-                      </q-popup-proxy>
-                    </q-icon>
-                  </template>
-
-                  <template v-slot:append>
-                    <q-icon name="access_time" class="cursor-pointer">
-                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-time v-model="date1" mask="YYYY-MM-DD HH:mm" format24h>
-                          <div class="row items-center justify-end">
-                            <q-btn v-close-popup label="Close" color="primary" flat />
-                          </div>
-                        </q-time>
-                      </q-popup-proxy>
-                    </q-icon>
-                  </template>
-                </q-input>
-                <div class="q-mr-md">一</div>
-                <q-input filled dense v-model="date2">
-                  <template v-slot:prepend>
-                    <q-icon name="event" class="cursor-pointer">
-                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-date v-model="date2" mask="YYYY-MM-DD HH:mm">
-                          <div class="row items-center justify-end">
-                            <q-btn v-close-popup label="Close" color="primary" flat />
-                          </div>
-                        </q-date>
-                      </q-popup-proxy>
-                    </q-icon>
-                  </template>
-
-                  <template v-slot:append>
-                    <q-icon name="access_time" class="cursor-pointer">
-                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-time v-model="date2" mask="YYYY-MM-DD HH:mm" format24h>
-                          <div class="row items-center justify-end">
-                            <q-btn v-close-popup label="Close" color="primary" flat />
-                          </div>
-                        </q-time>
-                      </q-popup-proxy>
-                    </q-icon>
-                  </template>
-                </q-input>
-              </div>
               <div class="q-mt-lg">
                 <histogram-chart :option="delayOption" height="385"/>
               </div>
@@ -608,6 +637,8 @@ const runtime_rows = runtime_ref
             >
               <template v-slot:body="props">
                 <q-tr :props="props">
+                  <q-td key="id" :props="props" class="no-padding" v-show="false">
+                  </q-td>
                   <q-td key="mission_name" :props="props" class="no-padding">
                     <q-btn no-caps flat color="primary" :label="tc('查看详情')" @click="navigateToUrl(`/my/monitor/web/detail/${props.row.id}`)"/>
                     {{ props.row.mission_name }}
@@ -622,7 +653,7 @@ const runtime_rows = runtime_ref
                     {{ props.row.mission_status !== '异常' ? props.row.mission_delay : props.row.mission_delay * -1 }}
                   </q-td>
                   <q-td key="probe" :props="props" class="no-padding">
-                    探针{{ props.row.probe }}
+                    {{ props.row.probe === '1' ? '探针1（软件园区）' : '探针2（信息化大厦）' }}
                   </q-td>
                 </q-tr>
               </template>
