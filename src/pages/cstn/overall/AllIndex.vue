@@ -148,28 +148,28 @@ const clusteredData = {
       id: '2',
       label: '软件园接入',
       nodes: [
-        { id: 'SoftwareAccess-1', clusterId: '2', label: '软件园接入1' },
-        { id: 'SoftwareAccess-2', clusterId: '2', label: '软件园接入2' },
-        { id: 'SoftwareAccess-3', clusterId: '2', label: '软件园接入3' },
-        { id: 'SoftwareAccess-4', clusterId: '2', label: '软件园接入4' },
-        { id: 'SoftwareAccess-5', clusterId: '2', label: '软件园接入5' },
-        { id: 'SoftwareAccess-6', clusterId: '2', label: '软件园接入6' },
-        { id: 'SoftwareAccess-7', clusterId: '2', label: '软件园接入7' },
-        { id: 'SoftwareAccess-8', clusterId: '2', label: '软件园接入8' },
-        { id: 'SoftwareAccess-9', clusterId: '2', label: '软件园接入9' },
-        { id: 'SoftwareAccess-10', clusterId: '2', label: '软件园接入10' },
-        { id: 'SoftwareAccess-11', clusterId: '2', label: '软件园接入11' },
-        { id: 'SoftwareAccess-12', clusterId: '2', label: '软件园接入12' }
+        { id: 'SoftwareAccess-1', clusterId: '2', label: '1-软件园接入' },
+        { id: 'SoftwareAccess-2', clusterId: '2', label: '2-软件园接入' },
+        { id: 'SoftwareAccess-3', clusterId: '2', label: '3-软件园接入' },
+        { id: 'SoftwareAccess-4', clusterId: '2', label: '4-软件园接入' },
+        { id: 'SoftwareAccess-5', clusterId: '2', label: '5-软件园接入' },
+        { id: 'SoftwareAccess-6', clusterId: '2', label: '6-软件园接入' },
+        { id: 'SoftwareAccess-7', clusterId: '2', label: '7-软件园接入' },
+        { id: 'SoftwareAccess-8', clusterId: '2', label: '8-软件园接入' },
+        { id: 'SoftwareAccess-9', clusterId: '2', label: '9-软件园接入' },
+        { id: 'SoftwareAccess-10', clusterId: '2', label: '10-软件园接入' },
+        { id: 'SoftwareAccess-11', clusterId: '2', label: '11-软件园接入' },
+        { id: 'SoftwareAccess-12', clusterId: '2', label: '12-软件园接入' }
       ]
     },
     {
       id: '3',
       label: '软件园核心',
       nodes: [
-        { id: 'SoftwareCore-1', clusterId: '3', label: '软件园核心1' },
-        { id: 'SoftwareCore-2', clusterId: '3', label: '软件园核心2' },
-        { id: 'SoftwareCore-3', clusterId: '3', label: '软件园核心3' },
-        { id: 'SoftwareCore-4', clusterId: '3', label: '软件园核心4' }
+        { id: 'SoftwareCore-1', clusterId: '3', label: '1-软件园核心' },
+        { id: 'SoftwareCore-2', clusterId: '3', label: '2-软件园核心' },
+        { id: 'SoftwareCore-3', clusterId: '3', label: '3-软件园核心' },
+        { id: 'SoftwareCore-4', clusterId: '3', label: '4-软件园核心' }
       ]
     },
     {
@@ -181,15 +181,15 @@ const clusteredData = {
       id: '5',
       label: '信息化大厦核心',
       nodes: [
-        { id: 'CnicCore-1', clusterId: '5', label: '信息化大厦核心1' },
-        { id: 'CnicCore-2', clusterId: '5', label: '信息化大厦核心2' }
+        { id: 'CnicCore-1', clusterId: '5', label: '1-信息化大厦核心' },
+        { id: 'CnicCore-2', clusterId: '5', label: '2-信息化大厦核心' }
       ]
     },
     {
       id: '6',
       label: '怀柔核心',
       nodes: [
-        { id: 'HuairouCore-1', clusterId: '6', label: '怀柔核心1' }
+        { id: 'HuairouCore-1', clusterId: '6', label: '1-怀柔核心' }
       ]
     }
   ]
@@ -971,7 +971,7 @@ onMounted(() => {
     'aggregated-node',
     {
       draw (cfg, group) {
-        // console.log(cfg)
+        console.log(cfg)
         // console.log(group)
         const width = 140, height = 40
         const style = cfg.style || {}

@@ -54,12 +54,6 @@ export default {
       }
       return axiosService.get('/monitor/video-meeting/query', config)
     },
-    getMonitorWebsite (payload?: { query: { page: number; page_size: number } }) {
-      const config = {
-        params: payload?.query
-      }
-      return axiosService.get('/monitor/website', config)
-    },
     postMonitorWebsite (payload: { body: { name: string; scheme: string; hostname: string; uri: string; is_tamper_resistant?: boolean; remark?: string } }) {
       const data = payload.body
       return axiosService.post('/monitor/website', data)
@@ -76,12 +70,6 @@ export default {
         params: payload?.query
       }
       return axiosService.get('/monitor/website/detection-point', config)
-    },
-    getMonitorWebsiteQuery (payload: { query: { query: string, detection_point_id: string }, path: { id: string } }) {
-      const config = {
-        params: payload.query
-      }
-      return axiosService.get('/monitor/website/' + payload.path.id + '/query', config)
     }
   }
 }
