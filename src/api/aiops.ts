@@ -163,6 +163,7 @@ export default {
         end?: string
         delay_start?: number
         delay_end?: number
+        accessible?: boolean
       }}) {
       const configs = {
         params: payload?.query

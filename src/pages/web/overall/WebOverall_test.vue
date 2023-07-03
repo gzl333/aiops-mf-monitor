@@ -130,7 +130,7 @@ const dataOption = computed(() => ({
 })) // 嵌套饼环图
 
 const allMissionColumns = [
-  // { name: 'id', label: '任务id', align: 'center', field: 'id' },
+  { name: 'detail', label: '', align: 'center', field: 'detail' },
   { name: 'mission_name', align: 'center', label: '任务名称', field: 'mission_name', sortable: true },
   { name: 'mission_url', align: 'center', label: '任务链接', field: 'mission_url', sortable: true },
   { name: 'mission_remark', align: 'center', label: '备注', field: 'mission_url', sortable: true },
@@ -193,7 +193,7 @@ watch(model_option_type_search, async (new_value) => {
         standard.value = { min: 1, max: 50 }
         isDisable1.value = false
       } else {
-        standard.value = { min: 50, max: 5000 }
+        standard.value = { min: 100, max: 6000 }
         isDisable1.value = false
       }
     }
@@ -213,14 +213,14 @@ $bus.on('mission_select', msg => {
       // model_option_type_search.value = msg.name
     } else {
       if (msg.name === '流畅') {
-        standard.value = { min: 1, max: 3000 }
+        standard.value = { min: 1, max: 50 }
         isDisable1.value = false
       } else {
-        standard.value = { min: 3000, max: 5000 }
+        standard.value = { min: 100, max: 6000 }
         isDisable1.value = false
       }
     }
-    console.log(msg.name)
+    // console.log(msg.name)
   } else {
     // 是延时分支
     // console.log(`${a} is not in the list`);
@@ -236,6 +236,7 @@ $bus.on('mission_select', msg => {
     standard.value = { min: delay1, max: delay2 }
     // console.log(msg.value)
   }
+  funTmp()
 })
 
 // function compareStatus (a, b) {
@@ -285,7 +286,7 @@ const getDistribution = () => {
   })
 }
 const funTmp = () => {
-  console.log('waiting for api')
+  // console.log('waiting for api')
   const probeid = ref('')
   if (model_option_search.value === '探针1') {
     probeid.value = '1'
@@ -303,11 +304,19 @@ const funTmp = () => {
       delay_start: 0,
       delay_end: 0,
       probe_id: '',
-      status: false
+      status: true
     }
     if (model_option_type_search.value === '异常') {
       console.log('type search not available')
+      single_website_filter.start = date.formatDate(date1.value, 'X')
+      single_website_filter.end = date.formatDate(date2.value, 'X')
+      single_website_filter.delay_start = 1
+      single_website_filter.delay_end = 10000
+      single_website_filter.probe_id = probeid.value
+      single_website_filter.status = false
+      getWebsiteFilter(single_website_filter)
     } else {
+      console.log('click work')
       single_website_filter.start = date.formatDate(date1.value, 'X')
       single_website_filter.end = date.formatDate(date2.value, 'X')
       single_website_filter.delay_start = standard.value.min
@@ -369,7 +378,7 @@ getWebsite()
 
 const getWebsiteFilter = (instance : websiteFilter) => {
   allMissionRef.value = []
-  aiops.monitor.getWebsiteFilter({ query: { probe_id: instance.probe_id, start: instance.start, end: instance.end, delay_end: instance.delay_end, delay_start: instance.delay_start } }).then((res) => {
+  aiops.monitor.getWebsiteFilter({ query: { probe_id: instance.probe_id, start: instance.start, end: instance.end, delay_end: instance.delay_end, delay_start: instance.delay_start, accessible: instance.status } }).then((res) => {
     console.log(res)
     for (const resKey in res.data.results) {
       const single_data: allMissionlist = {
@@ -513,12 +522,14 @@ const getWebsiteFilter = (instance : websiteFilter) => {
             >
               <template v-slot:body="props">
                 <q-tr :props="props">
+                  <q-td key="detail" :props="props" class="no-padding">
+                    <q-btn no-caps flat color="primary" :label="tc('查看详情')" @click="navigateToUrl(`/my/monitor/web/detail/${props.row.id}`)"/>
+                  </q-td>
                   <q-td key="id" :props="props" class="no-padding" v-show="false">
                     <span>{{ props.row.id }}</span>
                   </q-td>
                   <q-td key="mission_name" :props="props" class="no-padding">
 <!--                    <q-btn no-caps flat color="primary" :label="tc('查看详情')" @click="navigateToUrl(`/my/monitor/web/detail/${props.row.id}`)"/>-->
-                    <q-btn no-caps flat color="primary" :label="tc('查看详情')" @click="navigateToUrl(`/my/monitor/web/detail/${props.row.id}`)"/>
                     {{ props.row.mission_name }}
                   </q-td>
                   <q-td key="mission_url" :props="props" class="no-padding">
