@@ -1,6 +1,58 @@
 // 更新日志内容，版本降序排列
 export const logs = [
   {
+    version: 'v0.3.2',
+    date: '2023-07-03',
+    time: '17:20:21',
+    release_author: 'duyukuan',
+    updates: [
+      {
+        info: '全局界面筛选逻辑完善',
+        commit_author: '郑玮蓁'
+      },
+      {
+        info: '类型筛选功能添加',
+        commit_author: '郑玮蓁'
+      },
+      {
+        info: '全局页面表格搜索逻辑更新',
+        commit_author: '郑玮蓁'
+      },
+      {
+        info: '全局页面表格排版修改',
+        commit_author: '郑玮蓁'
+      }
+    ]
+  },
+  {
+    version: 'v0.3.1',
+    date: '2023-07-02',
+    time: '17:15:27',
+    release_author: 'duyukuan',
+    updates: [
+      {
+        info: '前端逻辑修改后对接上线',
+        commit_author: '郑玮蓁'
+      },
+      {
+        info: '实时任务表格详情跳转页逻辑实现',
+        commit_author: '郑玮蓁'
+      },
+      {
+        info: '告警接口接入',
+        commit_author: '郑玮蓁'
+      },
+      {
+        info: '高级检索接口接入',
+        commit_author: '郑玮蓁'
+      },
+      {
+        info: '现有代码结构完善，布局修改',
+        commit_author: '郑玮蓁'
+      }
+    ]
+  },
+  {
     version: 'v0.3.0',
     date: '2023-07-01',
     time: '17:20:21',
