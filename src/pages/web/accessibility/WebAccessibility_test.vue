@@ -538,8 +538,7 @@ const runtime_rows = runtime_ref
           <div class="row">
             <div class="col-5">
               <div class="row items-center">
-                <div class="row items-center justify-end">
-                  <q-input class="q-mr-md" filled dense v-model="date1">
+                  <q-input filled dense v-model="date1">
                     <template v-slot:prepend>
                       <q-icon name="event" class="cursor-pointer">
                         <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -564,8 +563,8 @@ const runtime_rows = runtime_ref
                       </q-icon>
                     </template>
                   </q-input>
-                  <div class="q-mr-md">一</div>
-                  <q-input filled dense v-model="date2">
+                  <div class="q-ml-xs">一</div>
+                  <q-input class="q-ml-xs"  filled dense v-model="date2">
                     <template v-slot:prepend>
                       <q-icon name="event" class="cursor-pointer">
                         <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -591,22 +590,20 @@ const runtime_rows = runtime_ref
                     </template>
                   </q-input>
                 </div>
-                <div class="q-mt-lg">
-                  <div class="col text-center">
-                  <div>告警数：{{ alertCnt }}</div>
-                    <div></div>
+              <div>
+                <div class="q-mt-lg text-subtitle1">
+                  <span>告警数：{{ alertCnt }}</span>
+                </div>
+                <div class="row items-center">
+                  <div class="col">
+                    <pie-chart height="220" :option="overviewOption"/>
                   </div>
-                </div>
-              </div>
-              <div class="row items-center">
-                <div class="col">
-                  <pie-chart height="220" :option="overviewOption"/>
-                </div>
-                <div class="col text-center">
-                  <div class="text-h6">当前任务总览</div>
-                  <div class="q-mt-sm">总任务数：{{ all_mission_cnt }}</div>
-                  <div>异常数：{{ invalid_mission_cnt }}</div>
-                  <div>正常连接数：{{ valid_mission_cnt }}</div>
+                  <div class="col text-center">
+                    <div class="text-h6">当前任务总览</div>
+                    <div class="q-mt-sm">总任务数：{{ all_mission_cnt }}</div>
+                    <div>异常数：{{ invalid_mission_cnt }}</div>
+                    <div>正常连接数：{{ valid_mission_cnt }}</div>
+                  </div>
                 </div>
               </div>
             </div>
